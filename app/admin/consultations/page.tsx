@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { client } from '@/db/client';
 import { SecureCrypto } from '@/lib/crypto';
 import nodemailer from 'nodemailer';
+export default function Page() {
+  return <div>Consultations</div>;
+}
 
 const cryptoProcessor = new SecureCrypto();
 
