@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>送信完了</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+
+</head>
+
+<body>
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+  </nav>
+</header>
+
+<main>
+  <section class="thanks-section">
+    <h1 class="thanks-title" id="thanks-title"></h1>
+    <p class="thanks-text" id="thanks-text"></p>
+    <a href="index.html" class="back-button" id="back-btn"></a>
+  </section>
+</main>
+
+<script>
+/* ==============================
+   URLからタイプを判定し、JSONを表示
+   ============================== */
+const urlParams = new URLSearchParams(window.location.search);
+const type = urlParams.get('type'); 
+
+fetch('data/static-texts.json')
+  .then(res => res.json())
+  .then(data => {
+
+    // 1. ヘッダー名の反映（他のページと統一：rinen.name を優先）
+    const headerNameElem = document.getElementById('header-name');
+    if (headerNameElem) {
+      headerNameElem.textContent = data.rinen ? data.rinen.name : (data.profile ? data.profile.name : "");
+    }
+
+    // 2. 表示するデータの切り替え
+    // typeに応じて、data.post / data.comment / data.contact を選択
+    let content;
+    if (type === 'post') {
+      content = data.post;
+    } else if (type === 'comment') {
+      content = data.comment;
+    } else {
+      content = data.contact; // 指定がない場合はお問い合わせをデフォルトに
+    }
+
+    if (content) {
+      // タイトルの反映
+      document.getElementById('thanks-title').textContent = content.thanksTitle;
+      
+      // テキストの反映（改行コード \n を <br> に置換）
+      const textElem = document.getElementById('thanks-text');
+      if (content.thanksText) {
+        textElem.innerHTML = content.thanksText.replace(/\n/g, '<br>');
+      }
+      
+      // ボタンのテキスト反映
+      const backBtn = document.getElementById('back-btn');
+      backBtn.textContent = content.backBtn;
+
+      // コメント(投書)の場合は、活動報告セクションへ戻るように調整も可能
+      if (type === 'comment') {
+        backBtn.href = "policy.html#activity"; 
+      }
+      
+      // ブラウザのタブ名（title）も更新
+      document.title = content.thanksTitle;
+    }
+  })
+  .catch(err => console.error("データ取得エラー:", err));
+</script>
+
+</body>
+</html>

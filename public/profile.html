@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自己紹介</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+  <style>
+    .page-header-columns { display: flex; flex-direction: column; gap: 2rem; width: 100%; }
+    @media (min-width: 1024px) { .page-header-columns { flex-direction: row; } }
+    .page-header-left { 
+        flex: 0 0 auto;   /* ← 伸びない */
+        width: 100%;
+        max-width: 500px; /* 好きな最大幅 */
+     }
+    .map-embed-wrapper { 
+      position: relative; 
+      width: 100%; 
+      aspect-ratio: 1 / 1; 
+      border-radius: 24px; 
+      overflow: hidden; 
+      background: #f0f0f0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .map-embed-wrapper iframe { border: 0; width: 100%; height: 100%; }
+
+    body {
+      background-color: #7DA4CD;
+    }
+
+    .profile {
+      background-color: #F5F7FA;
+    }
+  </style>
+</head>
+
+<body data-page="policy">
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+    <div id="header-nav"></div>
+    <button id="menu-toggle" aria-label="メニュー">☰</button>
+  </nav>
+</header>
+
+<main>
+  <section class="profile">
+    <h1 class="profile-title" id="profile-title"></h1>
+    <div class="profile-photo" id="profile-photo"></div>
+    <div class="profile-name">
+      <h2 id="profile-name"></h2>
+      <p id="profile-name-en"></p>
+      <span id="profile-role"></span>
+    </div>
+    <div class="profile-basic" id="profile-basic"></div>
+     <section class="profile-policies">
+  <h3 id="policies-title"></h3>
+
+  <!-- ボタン -->
+  <div id="policy-buttons" class="policy-buttons"></div>
+
+  <!-- 切替表示エリア -->
+ <div class="policy-content" id="policy-text"></div>
+</section>
+    <section class="profile-history">
+      <h3>経歴</h3>
+      <div id="profile-history"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+async function loadProfile() {
+  try {
+    // プロフィール基本情報用の静的データ読み込み
+    const staticRes = await fetch('data/static-texts.json');
+    const staticData = await staticRes.json();
+    let profile = staticData.profile;
+
+    // --- 各種 API からデータを取得 ---
+    try {
+      const [profileRes, careerRes, topRes] = await Promise.all([
+        fetch('/api/profile?password=admin'),
+        fetch('/api/career?password=admin'),
+        fetch('/api/top-page')
+      ]);
+
+      // 1. プロフィール基本情報の反映
+      if (profileRes.ok) {
+        const apiProfile = await profileRes.json();
+        if (apiProfile && apiProfile.Name) {
+          const photoUrl = apiProfile.IMG_URL?.trim() ? apiProfile.IMG_URL : profile.photo;
+          profile = {
+            ...profile,
+            name: apiProfile.Name,
+            photo: photoUrl,
+            basic: [
+              { label: '生年月日', value: apiProfile.birthday },
+              { label: '出身地', value: apiProfile.From },
+              { label: '家族構成', value: apiProfile.Family },
+              { label: '趣味・特技', value: apiProfile.hobby }
+            ].filter(item => item.value),
+            role: apiProfile.Job || profile.role
+          };
+        }
+      }
+
+      // 2. キャリアデータの描画
+      let careers = [];
+      if (careerRes.ok) careers = await careerRes.json();
+      
+      document.title = `${profile.name}`;
+      document.getElementById('profile-title').textContent = profile.title;
+      document.getElementById('profile-name').textContent = profile.name;
+      document.getElementById('profile-name-en').textContent = profile.name_en || '';
+      document.getElementById('profile-role').textContent = profile.role || '';
+
+      if (profile.photo) {
+        const photoUrl = profile.photo.includes('cloudinary') ? `${profile.photo}?t=${Date.now()}` : profile.photo;
+        document.getElementById('profile-photo').innerHTML = `<img src="${photoUrl}" alt="${profile.name}" loading="lazy">`;
+      }
+
+     const basicWrap = document.getElementById('profile-basic');
+basicWrap.innerHTML = '';  // 古い要素を消す
+
+profile.basic.forEach(item => {
+  const div = document.createElement('div');
+  div.className = 'basic-row';
+  div.innerHTML = `
+    <div class="label"><strong>${item.label}</strong></div>
+    <div class="value"><p>${item.value}</p></div>
+  `;
+  basicWrap.appendChild(div);
+});
+
+
+      const historyWrap = document.getElementById('profile-history');
+      historyWrap.innerHTML = '';
+      let historyItems = (Array.isArray(careers) && careers.length > 0)
+        ? careers.map(c => ({ year: c.year + '年' + c.month + '月', text: c.Content }))
+        : (profile.history || []);
+      historyItems.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'history-row';
+        div.innerHTML = `<span class="year">${h.year}</span><p>${h.text}</p>`;
+        historyWrap.appendChild(div);
+      });
+
+      // 4. 政策（ボタン切替表示）
+const policiesData = staticData.policies;
+
+if (policiesData) {
+  const policiesTitle = document.getElementById('policies-title');
+  const buttonsWrap = document.getElementById('policy-buttons');
+  const textEl = document.getElementById('policy-text');
+
+  // タイトル表示
+  policiesTitle.textContent = policiesData.title;
+
+  // 初期表示（1番目）
+  if (policiesData.items && policiesData.items.length > 0) {
+    const first = policiesData.items[0];
+
+    if (Array.isArray(first.texts)) {
+      textEl.innerHTML = first.texts
+        .map(t => `<p>${t}</p>`)
+        .join('');
+    } else {
+      textEl.textContent = first.texts || '';
+    }
+  }
+
+  // ボタン生成
+  buttonsWrap.innerHTML = '';
+  policiesData.items.forEach((item, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'policy-btn';
+    btn.textContent = item.title;
+
+    btn.addEventListener('click', () => {
+      if (Array.isArray(item.texts)) {
+        textEl.innerHTML = item.texts
+          .map(t => `<p>${t}</p>`)
+          .join('');
+      } else {
+        textEl.textContent = item.texts || '';
+      }
+
+      document.querySelectorAll('.policy-btn')
+        .forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+
+    if (index === 0) btn.classList.add('active');
+    buttonsWrap.appendChild(btn);
+  });
+}
+
+    } catch (e) { console.error('API Error:', e); }
+  } catch (error) { console.error('Load Error:', error); }
+}
+
+loadProfile();
+</script>
+
+
+<script type="module" src="src/header.js"></script>
+
+<!-- ここから下はポップアップ画面を呼び出すための指示　20260304追加-->
+<div id="modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div class="modal-responsive" style="background:white; width:90%; max-width:600px; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; background:#4682B4; color:white;">
+      <span style="font-size:1.1rem;font-weight:bold;">ご相談フォーム</span>
+      <button id="closeModalBtn" style="background:none; border:none; font-size:32px; color:white; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <iframe src="/consultation" id="consultationIframe" style="width:100%; border:none; min-height:450px;"></iframe>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const modal = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeModalBtn");
+    const iframe = document.getElementById("consultationIframe");
+
+    // --- 1. モーダルを開く関数（グローバル化してヘッダー等から呼べるようにする） ---
+    window.openConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "flex";
+        window.parent.postMessage("HTML_MODAL_OPEN", "*");
+      }
+    };
+
+    // --- 2. モーダルを閉じる関数 ---
+    window.closeConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "none";
+        window.parent.postMessage("HTML_MODAL_CLOSE", "*");
+      }
+    };
+
+    // --- 3. イベントリスナーの設定 ---
+    // 閉じるボタン
+    if (closeBtn) closeBtn.onclick = window.closeConsultationModal;
+
+    // 背景クリックで閉じる
+    modal.onclick = function(e) {
+      if (e.target === modal) window.closeConsultationModal();
+    };
+
+    // 既存のバナーボタン (id="openModalBtn") があれば連動させる
+    const bannerBtn = document.getElementById("openModalBtn");
+    if (bannerBtn) {
+      bannerBtn.onclick = function(e) {
+        e.preventDefault();
+        window.openConsultationModal();
+      };
+    }
+
+    // --- 4. iframe送信完了時の自動クローズ処理 ---
+    window.addEventListener("message", function(event) {
+      if (event.data === "CONSULTATION_SUBMITTED") {
+        setTimeout(window.closeConsultationModal, 2000);
+      }
+      
+      // 高さ調整
+      if (event.data.type === 'SET_HEIGHT') {
+        const finalHeight = Math.max(event.data.height, 450);
+        iframe.style.height = (finalHeight + 20) + 'px';
+      }
+    });
+  })();
+</script> 
+
+<!-- ポップアップ追加のための指示20260304 終了-->
+
+</body>
+</html>

@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  
+  <meta name="robots" content="noindex, nofollow">
+  
+
+  <title>TOPページ | 田中しほ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+<style>
+
+
+.hero-container {
+      position: relative;
+      width: 100% !important;
+      left: 0 !important;
+      margin-left: 0 !important;
+      height: 90vh; 
+      /* min-height: 700px; */
+      max-width: none !important;
+      padding: 0 !important;
+      overflow: visible;
+      z-index: 5;
+      background-color: #fff;
+    }
+
+    /* 人物画像：PC版は「80% 5%」を死守 */
+    #dynamic-hero-img {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80%; 
+      height: 100%;
+      object-fit: cover;
+      object-position: 80% 5%; 
+      z-index: 1;
+    }
+
+    /* 青い斜めセクション：向きは逆（上が狭く、下が広い） */
+    .hero-clip-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 60%; 
+      height: 100%;
+      background-color: #4682B4;
+      z-index: 10;
+      pointer-events: none;
+      clip-path: polygon(0 0, 30% 0, 60% 100%, 0 100%);
+    }
+
+    /* 文字ボックス：各デバイス共通の基本デザイン */
+    .hero-copy {
+      position: absolute;
+      bottom: 10%; 
+      left: 2%; 
+      z-index: 20;
+      background-color: rgba(255, 255, 255, 0.98); 
+      padding: 50px 60px;
+      border-radius: 10px; 
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+      border: 10px double #4682B4; /* 2pxの太さ / 実線 / テーマカラーの青 */
+      max-width: auto;
+      transform: none;
+    }
+
+    .hero-copy h2 {
+      font-family: 'M PLUS 1p', sans-serif;
+      font-size: 4.2rem;
+      font-weight: 850;
+      color: #267bdd; 
+      line-height: 1.3;
+      margin: 0 0 20px 0;
+      white-space: nowrap; 
+      text-decoration: underline;
+      text-decoration-color: #8cb4e2;
+      text-decoration-thickness: 6px;
+      text-underline-offset: 5px; /* 文字との距離 */
+    }
+
+    .hero-copy p {
+      font-size: 3.0rem; 
+      color: #555;
+      font-weight: 550;
+      margin: 0;
+      letter-spacing: 0.1em;
+    }
+
+/* --- 横長画面：文字ボックスを左下部に配置 --- */
+    @media (min-width: 1024px) {
+      .hero-copy {
+      
+      transform: none;
+    }
+      
+      .hero-copy h2 {
+        /* ★1行に収まるようサイズを調整。vwを使って画面幅に合わせます */
+        font-size: clamp(1.0rem, 5.0vw, 6.5rem); 
+        white-space: nowrap; /* ★改行を禁止して1行に強制 */
+        letter-spacing: -0.02em; /* 文字間をわずかに詰めて収まりを良く */
+        margin-bottom: 8px;
+      }
+
+      .hero-copy p {
+        font-size: clamp(1.0rem, 4.0vw, 6.0rem);
+        white-space: nowrap; /* ★改行を禁止して1行に強制 */
+        letter-spacing: 0.05em;
+      }
+    }
+
+/* --- スマホ版調整 --- */
+    @media (max-width: 1023px ) {
+      .hero-container {
+        height: 85vh;
+        min-height: 500px;
+      }
+
+      /* お顔を少し左（中央寄り）に */
+      #dynamic-hero-img {
+        width: 100%;
+        object-position: 65% 10%; 
+      }
+
+      /* スマホの青い帯 */
+      .hero-clip-bg {
+        width: 100%;
+        height: 35%; 
+        top: auto;
+        bottom: 0;
+        clip-path: polygon(0 0, 100% 30%, 100% 100%, 0 100%);
+      }
+
+      
+      .hero-copy {
+        
+        bottom: 25%; /* 5% →　25% 変更 */
+        left: 3%; /* 左右の余白を少し広げて一行に入りやすく調整 */
+        right: 3%;
+        padding: 20px 10px; /* 上下の余白を詰める */
+        max-width: 94%;
+        /* border-left: none; */
+        /* border-bottom: 10px solid #4682B4; */
+        text-align: center;
+      }
+
+      .hero-copy h2 {
+        /* ★1行に収まるようサイズを調整。vwを使って画面幅に合わせます */
+        font-size: clamp(1.4rem, 6.5vw, 2rem); 
+        white-space: nowrap; /* ★改行を禁止して1行に強制 */
+        letter-spacing: -0.02em; /* 文字間をわずかに詰めて収まりを良く */
+        margin-bottom: 8px;
+      }
+
+      .hero-copy p {
+        font-size: clamp(1.4rem, 6.0vw, 2rem);
+        letter-spacing: 0.05em;
+      }
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 30000;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    /* --- index.html の CSS 修正箇所 --- */
+    .modal-responsive {
+      background: white;
+      width: 95%;
+      max-width: 800px;
+      /* 最小の高さを確保（これより小さくならない） */
+      min-height: 500px; 
+      max-height: 90vh;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ddd;
+      animation: modalFadeIn 0.3s ease-out;
+      transition: height 0.3s ease; /* 伸縮をスムーズに */
+    }
+    /* iframe自体がスクロールしないように設定（外側のmax-heightで制御するため） */
+    .modal-responsive iframe {
+      width: 100%;
+      flex: 1;
+      border: none;
+      overflow: hidden; /* 子画面側で高さが計算されるので、親側のスクロールバーは消す */
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+/* --- 相談セクションここから --- */
+
+/* セクション全体の背景を #4682B4 に。白い枠線を消して背景に溶け込ませる */
+.consultation-section {
+  background-color: #7DA4CD !important; /* 背景をご指定の色に */
+  max-width: none !important;           /* 横幅の制限を解除して背景を広げる */
+  margin: 0 auto !important;
+  padding: 40px 0 !important;           /* 上下の余白を確保 */
+  border: none !important;              /* 白い枠線を削除 */
+  box-shadow: none !important;           /* 白いボックスの影を削除 */
+  display: flex;
+  justify-content: center;
+}
+
+/* バナー全体の箱（ここで大きさをコントロール） */
+.consultation-banner-img-type {
+  display: block;
+  width: 90% !important;         /* スマホでは画面幅いっぱいに近く */
+  max-width: 750px !important;   /* バナー自体の最大横幅 */
+  margin: 0 auto !important;
+  position: relative !important;
+  
+  border-radius: 15px;
+  overflow: hidden;
+  text-decoration: none;
+  /* 背景の青に合わせた深みのある影 */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); 
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  /* 画像の周りに隙間ができた時のための背景色 */
+  background-color: #ffffff; 
+}
+
+/* ホバー時の演出（少し浮き上がらせる） */
+.consultation-banner-img-type:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+}
+
+/* 画像の設定 */
+.base-image {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* 画像の横幅ピッタリのボタン */
+.banner-footer-btn {
+  width: 100%;
+  background-color: #7DA4CD; /* 背景の #4682B4 より少し濃い青でパキッとさせる */
+  color: #ffffff;
+  padding: 22px 0;           /* 厚みを出して押しやすく */
+  text-align: center;
+  font-size: 1.5rem;         /* 文字をさらに視認性アップ */
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  transition: background-color 0.3s ease;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ホバー時にボタンの色を少し暗くして「押せる感」を出す */
+.consultation-banner-img-type:hover .banner-footer-btn {
+  background-color: #2a4d6a; /* 濃い紺色 */
+}
+
+/* ヒーローセクションとの繋ぎ目を調整 */
+.hero-container {
+  margin-bottom: 0 !important;
+}
+
+/* --- 相談セクションここまで --- */
+
+/* FAQ css　ここから */
+/* FAQ全体のスタイル */
+.faq-section {
+  padding-top: 10px !important;    /* セクション自体の上の余白を最小化 */
+  padding-bottom: 20px !important;
+}
+
+/* 外枠（ここが大きな空白の原因でした） */
+.faq-outer-wrapper {
+  max-width: 800px;
+  margin: 10px auto;              /* 上下の余白を 40px → 10px に縮小 */
+  padding: 0 20px;
+}
+
+/* 押す前の「大きな箱」 */
+.faq-main-toggle {
+  background-color: #4682B4; /* 田中さんのテーマカラーに合わせて調整 */
+  color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.faq-main-toggle:hover {
+  background-color: #3a6d96;
+  transform: translateY(-2px);
+}
+
+.faq-toggle-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.faq-main-chevron {
+  transition: transform 0.4s ease;
+}
+
+/* スライドして出てくる中身のコンテナ */
+.faq-slide-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0, 1, 0, 1);
+  background-color: #f0f7ff;
+  border-radius: 0 0 12px 12px;
+  margin-top: -5px; /* 箱と一体化させる */
+}
+
+/* 開いた時の状態 */
+.faq-outer-wrapper.is-open .faq-slide-container {
+  max-height: none; /* 十分な高さ */
+  transition: max-height 1s ease-in-out;
+  border: 2px solid #4682B4;
+  border-top: none;
+}
+
+.faq-outer-wrapper.is-open #section-chevron {
+  transform: rotate(180deg);
+}
+
+/* 中のリスト項目 */
+.faq-inner-list {
+  padding: 20px;
+}
+
+.faq-item {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #dce8f0;
+  padding-bottom: 15px;
+}
+
+/* Q（質問）のスタイル：青色 */
+.faq-q {
+  font-weight: bold;
+  color: #4682B4; /* 田中さんのテーマカラー（青） */
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start; /* 複数行になってもQが上に固定されるように */
+}
+
+.faq-q::before {
+  content: "Q.";
+  margin-right: 10px;
+  font-size: 1.2rem;
+  color: #4682B4; /* Qの文字を青に */
+}
+
+/* A（回答）のスタイル：ピンク色 */
+.faq-a {
+  color: #444;
+  line-height: 1.6;
+  padding-left: 0; /* 位置調整のため一度リセット */
+  display: flex;
+  align-items: flex-start;
+}
+
+.faq-a::before {
+  content: "A.";
+  margin-right: 10px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #e91e63; /* ★回答のAをピンクに */
+}
+
+.faq-a {
+  color: #444;
+  line-height: 1.6;
+  padding-left: 25px;
+}
+/*FAQ cssここまで*/
+
+/* --- YouTubeセクション全体（強制適用版：少し薄い青） --- */
+.youtube-section {
+  /* 少し明るく落ち着いた青に変更 */
+  background-color: #7DA4CD !important; 
+  
+  width: 100% !important;
+  left: 0 !important;
+  margin-left: 0 !important;
+  position: relative !important;
+  padding: 80px 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  max-width: none !important;
+}
+
+/* 動画プレイヤーを囲む枠 */
+.video-wrapper {
+  width: 90% !important;
+  max-width: 850px !important; 
+  background: #000 !important; 
+  
+  /* 白枠を少しだけ細く(8px)して洗練された印象に */
+  border: 8px solid #ffffff !important; 
+  
+  /* 影を少し柔らかく調整 */
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25) !important; 
+  
+  border-radius: 6px !important; 
+  overflow: hidden !important;
+  line-height: 0 !important;
+  position: relative !important;
+  padding-bottom: 0 !important; 
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+}
+
+/* iframe自体のサイズ固定 */
+.video-wrapper iframe {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  display: block !important;
+}
+
+/* 「動画読み込み中」の文字色 */
+.thumbnail-loading {
+  color: #ffffff !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  font-weight: bold !important;
+  letter-spacing: 0.1em !important;
+  z-index: 1 !important;
+}
+/*youtubeセクションここまで*/
+
+/* 活動報告のカルーセル ここから*/
+/* --- 1. メイン見出し（最新の活動報告）を大きく --- */
+.news-block .section-title {
+  /* サイズを2.2remから3.0remに大幅アップ */
+  font-size: 3.0rem !important; 
+  font-weight: 800 !important;   /* より太くして力強さを出す */
+  color: #5A82A9 !important;     /* 統一感のある濃いめの青 */
+  font-family: 'Noto Serif JP', serif;
+  text-align: center;
+  margin-bottom: 50px !important; /* 文字が大きくなった分、下の余白も確保 */
+  letter-spacing: 0.05em !important;
+}
+
+/* --- 2. カルーセル内の各記事タイトルも大きく --- */
+    .pdf-item h3 {
+      /* サイズを1.1remから1.4remにアップ */
+      font-size: 1.4rem !important;
+      font-weight: 700 !important;
+      line-height: 1.5 !important;
+      color: #333 !important;
+      margin: 15px 0 !important;
+      
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 3.0em !important; /* 文字が大きくなったので高さ枠も調整 */
+    }
+
+    /* --- 3. スマホ版の文字サイズ調整（画面からはみ出さないよう調整） --- */
+    @media (max-width: 768px) {
+      .news-block .section-title {
+        font-size: 2.2rem !important; /* スマホでは読みやすいサイズに */
+        margin-bottom: 30px !important;
+      }
+      
+      .pdf-item h3 {
+        font-size: 1.2rem !important;
+        height: 3.0em !important;
+      }
+    }
+/*一覧*/
+/* --- 「一覧へ ＞」ボタンの大型化カスタム --- */
+.news-block .more-btn {
+  /* 1. 配置を中央に・ブロック要素化 */
+  display: block !important;
+  width: 280px !important;       /* ボタンの横幅をしっかり確保 */
+  margin: 50px auto 0 !important; /* 上に余白を作り、左右中央寄せ */
+  
+  /* 2. 文字のデザインを強化 */
+  font-size: 1.6rem !important;  /* 文字をぐっと大きく */
+  font-weight: 800 !important;   /* 極太にして視認性アップ */
+  color: #ffffff !important;     /* 文字色は白 */
+  text-align: center !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+  letter-spacing: 0.1em !important;
+
+  /* 3. ボタンの外見（背景と枠線） */
+  background-color: #5A82A9 !important; /* 見出しと同じ落ち着いた青 */
+  padding: 20px 0 !important;    /* 上下に厚みを持たせる */
+  border-radius: 50px !important; /* 角丸でモダンな印象に */
+  border: 2px solid #5A82A9 !important;
+  
+  /* 4. 動きの演出 */
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(90, 130, 169, 0.3) !important;
+}
+
+/* ホバー（マウスを乗せたとき）の演出 */
+.news-block .more-btn:hover {
+  background-color: #ffffff !important; /* 背景を白に反転 */
+  color: #5A82A9 !important;           /* 文字を青に */
+  transform: translateY(-3px) !important; /* 少し浮き上がる */
+  box-shadow: 0 8px 25px rgba(90, 130, 169, 0.5) !important;
+}
+
+/* スマホ版の調整 */
+@media (max-width: 768px) {
+  .news-block .more-btn {
+    width: 80% !important;       /* スマホでは画面幅に合わせる */
+    font-size: 1.3rem !important; /* 少しだけサイズを落とす */
+    padding: 15px 0 !important;
+  }
+}
+
+/* 活動報告のカルーセル ここまで */
+
+/* SNSセクション ここから */
+/* --- SNSセクション全体：強制フルワイド設定 --- */
+.sns-jump-section {
+  /* 1000pxの壁を壊す */
+  max-width: none !important; 
+  /* 画面の端まで強制的に広げる */
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  background-color: #7DA4CD !important; /* 明るい空色 */
+}
+
+/* タイル配置のコンテナ（カードを並べる枠） */
+#dynamic-sns-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 20px !important;
+  
+  /* ここも重要：コンテナ自体が左に寄らないように auto を設定 */
+  width: 100% !important;
+  max-width: 1000px !important;
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+
+/* SNSのタイトル */
+.sns-jump-section .section-title {
+  width: 100% !important;
+  font-size: 3.0rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important; 
+  margin-bottom: 50px !important;
+  letter-spacing: 0.1em !important;
+  text-align: center !important;
+}
+
+/* 各SNSのカードスタイル */
+.sns-row {
+  background: #ffffff !important; 
+  display: flex !important;
+  flex-direction: column !important; 
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 30px 10px !important;
+  border-radius: 15px !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  
+  width: 160px !important;
+  height: 160px !important;
+  border: none !important;
+}
+
+/* アイコンと文字のコンテナ */
+.sns-left {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.sns-icon-lucide {
+  width: 45px !important;
+  height: 45px !important;
+  margin-bottom: 12px !important;
+}
+
+.sns-left span {
+  font-size: 1.1rem !important;
+  font-weight: bold !important;
+  color: #333 !important;
+}
+
+.sns-row .arrow {
+  display: none !important;
+}
+
+/* --- 各SNSのカラー --- */
+.sns-icon-lucide.instagram { color: #E1306C !important; }
+.sns-icon-lucide.facebook  { color: #1877F2 !important; }
+.sns-icon-lucide.x         { color: #000000 !important; }
+.sns-icon-lucide.tiktok    { color: #010101 !important; }
+.sns-icon-lucide.line      { color: #06C755 !important; }
+
+/* スマホ版（崩れ防止・完全中央寄せ版） */
+@media (max-width: 768px) {
+  .sns-jump-section {
+    padding: 60px 0 !important;
+  }
+
+  .sns-jump-section .section-title {
+    font-size: 2.2rem !important;
+    margin-bottom: 30px !important;
+  }
+
+  /* コンテナの設定を調整 */
+  #dynamic-sns-container {
+    display: flex !important;
+    flex-direction: row !important; /* 横並びを維持しつつ */
+    flex-wrap: wrap !important;     /* 折り返しを許可 */
+    justify-content: center !important; /* 折り返した先でも中央 */
+    align-items: center !important;
+    gap: 15px !important;
+    max-width: 100% !important;     /* 幅の制限を解除 */
+    padding: 0 10px !important;
+  }
+
+  /* カードのサイズを固定して安定させる */
+  .sns-row {
+    width: 150px !important;  /* スマホの2列にちょうどいいサイズ */
+    height: 150px !important;
+    padding: 20px 10px !important;
+    margin: 0 !important; /* 余計なマージンをカット */
+  }
+}
+
+  /* =========================
+   スクロールバー二重防止 修正
+   ========================= */
+
+/* ヒーローのはみ出しを防ぐ（absolute対策） */
+.hero-container {
+  overflow: hidden !important;
+}
+
+/* clip-pathや100%幅描画のズレ防止 */
+body {
+  overflow-x: hidden;
+}
+
+/* セクションが描画レイヤーを作らないようにする */
+.hero-clip-bg,
+#dynamic-hero-img {
+  max-width: 100%;
+}
+
+.youtube-section,
+.consultation-section,
+.sns-jump-section {
+  overflow: hidden;
+}
+</style>
+</head>
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+    <div id="header-nav"></div>
+<!-- <div> 
+      <a href="post.html" class="header-nav-item">ご相談</a>
+     </div> --> 
+    <button id="menu-toggle" aria-label="メニュー">☰</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ヒーローセクション -->
+<section class="hero-container">
+    <img id="dynamic-hero-img" src="assets/TOP_page_main.png" alt="田中しほ">
+    
+    <div class="hero-clip-bg"></div>
+    
+    <div class="hero-copy">
+        <h2>子どもたちが<br>
+        将来に希望が抱ける社会へ</h2>
+        <p>京都府議会議員 田中しほ</p>
+    </div>
+</section>
+
+
+<!-- ご相談セクション -->
+<section class="consultation-section">
+  <div class="consultation-banner-img-type" id="openModalBtn" style="cursor:pointer;">
+    <div class="banner-image-container">
+      <img src="/assets/ご相談ポストバナー1.png" 
+           alt="子育て相談ポスト" 
+           class="base-image">
+    </div>
+  </div>
+
+</section>
+<!-- ご相談セクションここまで -->
+ 
+ <!--FAQ セクション ここから-->
+<section class="faq-section">
+  <div class="faq-outer-wrapper">
+    
+    <div class="faq-main-toggle" onclick="toggleFaqSection()">
+      <div class="faq-toggle-content">
+        <i data-lucide="help-circle" class="faq-main-icon"></i>
+        <span>よくある投稿例 (FAQ) を見る</span>
+      </div>
+      <i data-lucide="chevron-down" id="section-chevron" class="faq-main-chevron"></i>
+    </div>
+
+    <div id="faq-slide-content" class="faq-slide-container">
+      <div class="faq-inner-list">
+        
+        <div class="faq-item">
+          <div class="faq-q">子育て支援の具体的な取り組みは？</div>
+          <div class="faq-a">京都府議会では、待機児童解消や一時預かりの拡充など、現場の声を反映した政策を推進しています。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">相談はどこからできますか？</div>
+          <div class="faq-a">サイト内の「ご相談ポスト」や公式LINEから、いつでもお気軽にご連絡いただけます。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">地域の活動予定を知るにはどうすればいいですか？</div>
+          <div class="faq-a">当サイトの「活動報告」や各SNS（Instagram、Facebook等）にて随時スケジュールを更新しております。</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+<!-- FAQ セクション ここまで -->
+
+<!-- YouTubeセクション ここから-->
+  <section class="youtube-section">
+    <div class="video-wrapper" id="dynamic-yt-container">
+      <div class="thumbnail-loading">動画読み込み中...</div>
+    </div>
+  </section>
+<!-- YouTubeセクション ここまで-->
+
+<!-- 活動報告のカルーセル ここから-->
+<section class="news-section"> <div class="news-block">
+    <h2 class="section-title">最新の活動報告</h2>
+    <div id="policy-carousel-container"></div>
+    <a href="policy.html" class="more-btn">一覧へ ＞</a>
+  </div>
+</section>
+<!-- 活動報告のカルーセル ここまで-->
+
+<!-- SNSセクション ここから-->  
+  <section class="sns-jump-section">
+    <h2 class="section-title">SNS</h2>
+    <div class="sns-list" id="dynamic-sns-container"></div>
+  </section>
+<!-- SNSセクション ここまで-->  
+
+<section class="page-header">
+  <div class="page-header-inner">
+
+    <div class="page-header-columns">
+      <!-- 左：地図 -->
+      <div class="page-header-left">        
+        <div class="map-embed-wrapper" id="dynamic-map-container"></div>
+      </div>
+
+      <!-- 右：事務所情報（ここに全部集約） -->
+      <div class="page-header-right">
+        <h2 class="page-header-title" id="dynamic-office-title"></h2>
+        <p class="page-header-text" id="dynamic-addr"></p>
+        <ul class="page-header-links" id="office-links"></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script src="js/activity-reports.js"></script>
+
+<script>
+const ContentManager = {
+  snsConfig: {
+    'Instagram': { icon: 'instagram', colorClass: 'instagram' },
+    'Facebook': { icon: 'facebook', colorClass: 'facebook' },
+    'X': { icon: 'twitter', colorClass: 'x' },
+    'TikTok': { icon: 'music', colorClass: 'tiktok' },
+    'LINE': { icon: 'message-circle', colorClass: 'line' }
+  },
+
+  generateEmbedMapUrl(address, rawMapUrl) {
+    if (address && address.trim() !== "") {
+      const query = address.replace('〒', '').trim();
+      return `https://maps.google.co.jp/maps?output=embed&q=${encodeURIComponent(query)}&z=20&iwloc=A`;
+    }
+    if (rawMapUrl && rawMapUrl.startsWith('http')) {
+      if (rawMapUrl.includes('embed')) return rawMapUrl;
+      return `https://maps.google.co.jp/maps?output=embed&q=${encodeURIComponent(rawMapUrl)}&z=17`;
+    }
+    return null;
+  },
+
+  applyData(data) {
+    if (!data) return;
+    
+    // 画像上書きは無効
+    const ytContainer = document.getElementById('dynamic-yt-container');
+    const vId = this.parseYoutubeId(data.ytUrl);
+    ytContainer.innerHTML = vId 
+      ? `<iframe width="560" height="315" src="https://www.youtube.com/embed/${vId}" frameborder="0" allowfullscreen></iframe>`
+      : `<div style="padding:40px; text-align:center; color:#999;">動画未設定</div>`;
+
+    const snsContainer = document.getElementById('dynamic-sns-container');
+    const snsList = typeof data.snsJson === 'string' ? JSON.parse(data.snsJson || "[]") : data.snsJson;
+    snsContainer.innerHTML = (snsList || []).map(sns => {
+      const config = this.snsConfig[sns.platform] || { icon: 'link', colorClass: 'default' };
+      return `
+        <a href="${sns.url}" class="sns-row" target="_blank" rel="noopener">
+          <div class="sns-left">
+            <i data-lucide="${config.icon}" class="sns-icon-lucide ${config.colorClass}"></i>
+            <span>${sns.platform}</span>
+          </div>
+          <span class="arrow">＞</span>
+        </a>`;
+    }).join('');
+
+    /* ===== 事務所情報 ===== */
+if (data.office) {
+  // タイトル
+  const titleEl = document.querySelector('.page-header-title');
+  if (titleEl) titleEl.textContent = data.office.title || "";
+
+  // 住所（office優先）
+  const addr = data.office.address || data.address || "";
+  document.getElementById('dynamic-addr').textContent = addr;
+
+  // 電話・メール
+  const linksWrapper = document.getElementById('office-links');
+  if (linksWrapper) {
+    linksWrapper.innerHTML = `
+      <li>${data.office.phone || ""}</li>
+      <li>${data.office.email || ""}</li>
+    `;
+  }
+
+  // 地図（office住所を使用）
+  const mapContainer = document.getElementById('dynamic-map-container');
+  const embedUrl = this.generateEmbedMapUrl(addr, data.mapUrl);
+  mapContainer.innerHTML = embedUrl
+    ? `<iframe src="${embedUrl}" loading="lazy" allowfullscreen></iframe>`
+    : `<div style="padding:20px; text-align:center; color:#999;">地図未設定</div>`;
+} else {
+  // officeが無い場合の保険（今まで通り）
+  document.getElementById('dynamic-addr').textContent = data.address || "";
+}
+
+    const page = document.body.dataset.page;
+    if (data.pageHeaders && data.pageHeaders[page]) {
+      const header = data.pageHeaders[page];
+      const pageHeaderTextEl = document.getElementById('page-header-text');
+if (pageHeaderTextEl) {
+  pageHeaderTextEl.textContent = header.text || "";
+}
+
+const linksWrapper = document.getElementById('page-header-links');
+if (linksWrapper && header.links) {
+  header.links.forEach(item => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = item.url;
+    a.textContent = item.label;
+    a.target = '_blank';
+    li.appendChild(a);
+    linksWrapper.appendChild(li);
+  });
+}
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  parseYoutubeId(url) {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  }
+};
+
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let carouselIndices = {};
+let carouselTotalSlides = {};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  let apiData = null;
+  let staticData = null;
+
+  // ① API取得（失敗しても止めない）
+  try {
+    const res = await fetch('/api/top-page');
+    if (res.ok) {
+      apiData = await res.json();
+      console.log('APIデータ取得成功:', apiData);
+    } else {
+      console.warn('APIレスポンス異常:', res.status);
+    }
+  } catch (e) {
+    console.warn('API取得失敗:', e);
+  }
+
+  // ② static取得（保険）
+  try {
+    const staticRes = await fetch('data/static-texts.json');
+    if (staticRes.ok) {
+      staticData = await staticRes.json();
+      console.log('静的JSON取得成功:', staticData);
+    }
+  } catch (e) {
+    console.error('静的JSON取得失敗:', e);
+  }
+
+  // ③ データをマージ（←ここが神修正）
+  const mergedData = {
+    ...(staticData || {}),
+    ...(apiData || {})
+  };
+
+  // ④ 無条件で適用（officeの有無で止めない）
+  ContentManager.applyData(mergedData);
+  // 活動報告一覧をpolicy.htmlと同じカルーセル構造で表示
+  try {
+  const res = await fetch('/api/activity-reports');
+  const data = await res.json();
+  if (data && data.success && Array.isArray(data.reports)) {
+
+    const sortedReports = data.reports
+      .sort((a, b) => {
+        const getDate = r => new Date(r.updated_at || r.created_at);
+        return getDate(b) - getDate(a);
+      })
+      .slice(0, 7);
+
+    window.renderPolicyCarousel(sortedReports);
+  }
+} catch (e) {
+  console.error('活動報告取得失敗:', e);
+}
+});
+
+// 以降、カルーセル等の関数はそのまま維持（変更なし）
+async function loadLatestShihoPress() {
+  const container = document.getElementById('shiho-press-container');
+  if (!container) return;
+  try {
+    const response = await fetch('/api/pdfs');
+    if (!response.ok) throw new Error('API Error');
+    const pdfs = await response.json();
+    if (!pdfs || pdfs.length === 0) {
+      container.innerHTML = '<p style="text-align:center; padding:20px;">現在、新しい記事はありません。</p>';
+      return;
+    }
+    const years = pdfs.map(pdf => new Date(pdf.created_at).getFullYear());
+    const latestYear = Math.max(...years);
+    const latestYearData = pdfs.filter(pdf => new Date(pdf.created_at).getFullYear() === latestYear).sort((a, b) => b.id - a.id);
+    const yearKey = 'shihopress_latest';
+    carouselTotalSlides[yearKey] = latestYearData.length;
+    carouselIndices[yearKey] = 0;
+    container.innerHTML = `
+      <div style="margin-bottom: 10px; font-weight: bold; color: #03709b;">最新：${latestYear}年度</div>
+      <div class="pdf-year-section" data-carousel-year="${yearKey}">
+        <div class="pdf-carousel-wrapper">
+          <div class="pdf-carousel">
+            <button class="carousel-nav carousel-prev" onclick="handlePrevClickIndex('${yearKey}')">❮</button>
+            <div class="pdf-carousel-inner" id="pdf-carousel-inner-${yearKey}">
+              ${latestYearData.map(pdf => `
+                <div class="pdf-item">
+                  <div class="report-thumb" id="thumb-container-${pdf.id}" onclick="window.open('${pdf.file_path}', '_blank')" style="cursor: pointer;">
+                    <div class="loading-spinner" style="height:200px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999;">読み込み中...</div>
+                  </div>
+                  <div class="pdf-item-meta">${new Date(pdf.created_at).getFullYear()}年 / Shiho Press</div>
+                  <h3>${pdf.title}</h3>
+                  <div class="pdf-actions">
+                    <button class="pdf-btn" onclick="window.open('${pdf.file_path}', '_blank')">PDFを開く</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <button class="carousel-nav carousel-next" onclick="handleNextClickIndex('${yearKey}')">❯</button>
+          </div>
+          <div class="carousel-dots">
+            ${latestYearData.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlideIndex('${yearKey}', ${i})"></div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    updateCarouselIndex(yearKey);
+    latestYearData.forEach(pdf => generatePdfThumbnail(pdf.file_path, `thumb-container-${pdf.id}`));
+  } catch (error) {
+    console.error('ShihoPress Carousel Error:', error);
+  }
+}
+
+async function generatePdfThumbnail(pdfUrl, containerId) {
+  try {
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 0.5 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    await page.render({ canvasContext: context, viewport: viewport }).promise;
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = `<img src="${canvas.toDataURL()}" style="width:100%; height:200px; object-fit:cover;">`;
+    }
+  } catch (e) {
+    console.error("Thumbnail error:", e);
+  }
+}
+
+function renderPolicyCarousel(reports) {
+  const container = document.getElementById('policy-carousel-container');
+  const yearKey = 'policy_latest';
+   carouselTotalSlides[yearKey] = reports.length;
+   carouselIndices[yearKey] = 0;
+   container.innerHTML = `
+     <div class="pdf-year-section" data-carousel-year="${yearKey}">
+       <div class="pdf-carousel-wrapper">
+         <div class="pdf-carousel">
+           <button class="carousel-nav carousel-prev" onclick="handlePrevClickIndex('${yearKey}')">❮</button>
+           <div class="pdf-carousel-inner" id="pdf-carousel-inner-${yearKey}">
+             ${reports.map(r => {
+               let yyyymm = '';
+               if (r.updated_at) {
+                 const d = new Date(r.updated_at);
+                 yyyymm = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+               } else if (r.created_at) {
+                 const d = new Date(r.created_at);
+                 yyyymm = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+               } else if (r.year) {
+                 yyyymm = `${r.year}年`;
+               }
+               return `
+                 <div class="pdf-item" onclick="location.href='article.html?type=report&id=${r.id}'">
+                   <div class="report-thumb">
+                     <img src="${(r.photos && r.photos[0]) ? r.photos[0] : ''}" onerror="this.src='https://placehold.jp/24/03709b/ffffff/300x200.png?text=No+Photo'">
+                   </div>
+                   <div class="pdf-item-meta">${yyyymm}</div>
+                   <h3>${r.title}</h3>
+                   <div class="pdf-actions"><span class="pdf-btn">詳細を見る</span></div>
+                 </div>
+               `;
+             }).join('')}
+           </div>
+           <button class="carousel-nav carousel-next" onclick="handleNextClickIndex('${yearKey}')">❯</button>
+         </div>
+         <div class="carousel-dots">
+           ${reports.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlideIndex('${yearKey}', ${i})"></div>`).join('')}
+         </div>
+       </div>
+     </div>`;
+   updateCarouselIndex(yearKey);
+}
+
+function updateCarouselIndex(key) {
+  const section = document.querySelector(`[data-carousel-year="${key}"]`);
+  if (!section) return;
+  const inner = section.querySelector('.pdf-carousel-inner');
+  const items = section.querySelectorAll('.pdf-item');
+  const index = carouselIndices[key];
+  const visibleItems = window.innerWidth < 768 ? 1 : (window.innerWidth < 1024 ? 2 : 3);
+  const itemWidth = 100 / visibleItems;
+  const offset = (visibleItems - 1) / 2;
+  inner.style.transform = `translateX(${-(index - offset) * itemWidth}%)`;
+  items.forEach((item, i) => item.classList.toggle('center', i === index));
+  const dots = section.querySelectorAll('.dot');
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+}
+
+function handlePrevClickIndex(key) {
+  const total = carouselTotalSlides[key];
+  if (total <= 1) return;
+  carouselIndices[key] = (carouselIndices[key] > 0) ? carouselIndices[key] - 1 : total - 1;
+  updateCarouselIndex(key);
+}
+
+function handleNextClickIndex(key) {
+  const total = carouselTotalSlides[key];
+  if (total <= 1) return;
+  carouselIndices[key] = (carouselIndices[key] < total - 1) ? carouselIndices[key] + 1 : 0;
+  updateCarouselIndex(key);
+}
+
+function goToSlideIndex(key, index) {
+  carouselIndices[key] = index;
+  updateCarouselIndex(key);
+}
+
+window.addEventListener('resize', () => Object.keys(carouselIndices).forEach(updateCarouselIndex));
+
+
+/*小倉　追加部分*/
+/*FAQのjavascript　ここから*/
+function toggleFaqSection() {
+  const wrapper = document.querySelector('.faq-outer-wrapper');
+  wrapper.classList.toggle('is-open');
+}
+</script>
+<script src="src/header.js"></script>
+    <div class="modal-overlay" id="modal">
+      <div class="modal-responsive">
+        <div style="
+          padding:16px 24px;
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          background:#4682B4;
+          color:white;">
+          <span style="font-size:1.1rem;font-weight:bold;">ご相談フォーム</span>
+          <button id="closeModalBtn" style="
+            background:none;
+            border:none;
+            font-size:32px;
+            color:white;
+            cursor:pointer;">×</button>
+        </div>
+
+        <iframe
+          src="/consultation"
+          style="width:100%;flex:1;border:none;"
+        ></iframe>
+      </div>
+    </div>
+
+    <script>
+      const modal = document.getElementById("modal");
+      const openBtn = document.getElementById("openModalBtn");
+      const closeBtn = document.getElementById("closeModalBtn");
+      window.parent.postMessage("HTML_MODAL_OPEN", "*");
+      window.parent.postMessage("HTML_MODAL_CLOSE", "*");
+
+      function openModal() {
+        document.querySelector(".modal-overlay").style.display = "flex";
+        window.parent.postMessage("HTML_MODAL_OPEN", "*");
+      }
+
+      function closeModal() {
+        document.querySelector(".modal-overlay").style.display = "none";
+        window.parent.postMessage("HTML_MODAL_CLOSE", "*");
+      }
+
+      openBtn.onclick = () => {
+        openModal();
+      };
+
+      closeBtn.onclick = () => {
+        closeModal();
+      };
+
+      modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+      };
+
+      /* --- index.html の末尾のスクリプトを修正 --- */
+
+      // iframe要素を取得
+      const iframe = modal.querySelector('iframe');
+
+      // 【追加】iframeが読み込まれたら一度高さをチェックする
+      iframe.onload = function() {
+        // 読み込み直後に最小限の高さを確保
+        const modalContent = document.querySelector(".modal-responsive");
+        if (modalContent && (!modalContent.style.height || modalContent.style.height === '0px')) {
+          modalContent.style.height = '500px'; // 初回のフォールバック
+        }
+      };
+
+      window.addEventListener("message", function(event) {
+        // 2. 送信完了 (CONSULTATION_SUBMITTED)
+        if (event.data === "CONSULTATION_SUBMITTED") {
+          setTimeout(() => {
+            closeModal();
+          }, 2000);
+        }
+
+        // 高さ調整の処理
+        if (event.data.type === 'SET_HEIGHT') {
+          const modalContent = document.querySelector(".modal-responsive");
+          if (modalContent) {
+            const headerHeight = 65; 
+            const minHeight = 450; 
+            const finalHeight = Math.max(event.data.height, minHeight);
+            
+            // 初回でも確実に適用されるよう、requestAnimationFrameを使用
+            requestAnimationFrame(() => {
+              modalContent.style.height = (finalHeight + headerHeight) + 'px';
+            });
+          }
+        }
+      });
+    </script>
+
+
+<!-- ここから下はポップアップ画面を呼び出すための指示　20260304追加-->
+<div id="modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div class="modal-responsive" style="background:white; width:90%; max-width:600px; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; background:#4682B4; color:white;">
+      <span style="font-size:1.1rem;font-weight:bold;">ご相談フォーム</span>
+      <button id="closeModalBtn" style="background:none; border:none; font-size:32px; color:white; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <iframe src="/consultation" id="consultationIframe" style="width:100%; border:none; min-height:450px;"></iframe>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const modal = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeModalBtn");
+    const iframe = document.getElementById("consultationIframe");
+
+    // --- 1. モーダルを開く関数（グローバル化してヘッダー等から呼べるようにする） ---
+    window.openConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "flex";
+        window.parent.postMessage("HTML_MODAL_OPEN", "*");
+      }
+    };
+
+    // --- 2. モーダルを閉じる関数 ---
+    window.closeConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "none";
+        window.parent.postMessage("HTML_MODAL_CLOSE", "*");
+      }
+    };
+
+    // --- 3. イベントリスナーの設定 ---
+    // 閉じるボタン
+    if (closeBtn) closeBtn.onclick = window.closeConsultationModal;
+
+    // 背景クリックで閉じる
+    modal.onclick = function(e) {
+      if (e.target === modal) window.closeConsultationModal();
+    };
+
+    // 既存のバナーボタン (id="openModalBtn") があれば連動させる
+    const bannerBtn = document.getElementById("openModalBtn");
+    if (bannerBtn) {
+      bannerBtn.onclick = function(e) {
+        e.preventDefault();
+        window.openConsultationModal();
+      };
+    }
+
+    // --- 4. iframe送信完了時の自動クローズ処理 ---
+    window.addEventListener("message", function(event) {
+      if (event.data === "CONSULTATION_SUBMITTED") {
+        setTimeout(window.closeConsultationModal, 2000);
+      }
+      
+      // 高さ調整
+      if (event.data.type === 'SET_HEIGHT') {
+        const finalHeight = Math.max(event.data.height, 450);
+        iframe.style.height = (finalHeight + 20) + 'px';
+      }
+    });
+  })();
+</script> 
+
+<!-- ポップアップ追加のための指示20260304 終了-->
+
+
+
+
+  </body>
+</html>

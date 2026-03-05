@@ -1,0 +1,54 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "incremental": true,
+    "module": "esnext",
+    "outDir": "public/js",
+    "rootDir": ".",        // プロジェクト全体を rootDir に設定
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "esModuleInterop": true
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "app/**/*",   // app フォルダ内の全ての TypeScript ファイルを対象にする
+    "src/**/*",    // src フォルダ内の全ての TypeScript ファイルも対象にする
+    "db/**/*",     // db フォルダ内も対象にする
+    "**/*.tsx",     // TypeScript の JSX ファイルも対象に
+    "types/**/*.d.ts" // ← 追加！
+  ],
+  "exclude": [
+    "node_modules",
+    "public",      // public フォルダを除外
+    ".next",       // next.js による自動生成ファイルを除外
+    "dist",        // 出力ファイルを除外
+    "scripts",     // スクリプトファイルを除外
+    "**/*.js",     // JS ファイルを除外（必要に応じて）
+  ]
+}

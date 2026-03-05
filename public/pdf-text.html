@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDFファイル - テキスト表示</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+<style>
+  /* --- ページ全体の基本レイアウト --- */
+  .pdf-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .pdf-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .pdf-header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  /* --- サムネイル表示用のスタイル (16:9比率) --- */
+  .pdf-thumbnail-box {
+    width: 100%;
+    aspect-ratio: 16 / 9; /* 16:9比率に固定 */
+    background-color: #f0f0f0;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .pdf-thumbnail-canvas {
+    width: 100%;
+    height: 100%;
+    /* 縦長のPDFを横長の枠に合わせ、上部を基準にクロップ */
+    object-fit: cover;
+    object-position: top; 
+  }
+
+  .thumb-loading-text {
+    font-size: 12px;
+    color: #999;
+    position: absolute;
+    z-index: 1;
+  }
+
+  /* --- 検索結果なし等の表示 --- */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+  }
+
+  .empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+  }
+
+  /* --- PDFビューアー（モーダル画面） --- */
+  .pdf-viewer {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+    flex-direction: column;
+    z-index: 99;
+  }
+
+  .pdf-viewer.show {
+    display: flex;
+  }
+
+  .pdf-viewer-header {
+    padding: 15px 20px;
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pdf-viewer-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .pdf-viewer-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pdf-viewer-controls {
+    padding: 15px 20px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pdf-controls-btn {
+    padding: 8px 12px;
+    background-color: #ddd;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+
+  .pdf-back-btn {
+    background-color: #333;
+    color: white;
+    margin-left: auto;
+  }
+
+  .pdf-page-info {
+    color: #666;
+    font-size: 14px;
+    min-width: 150px;
+    text-align: center;
+  }
+
+  .pdf-viewer-body {
+    padding: 20px;
+    overflow: auto;
+    background-color: #f5f5f5;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pdf-page-container {
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    max-width: 900px;
+    width: 100%;
+    position: relative;
+  }
+
+  /* --- PDF描画・キャンバス関連 --- */
+  .pdf-canvas-container {
+    position: relative;
+    width: 100%;
+    display: inline-block;
+    transform-origin: top center;
+  }
+
+  #pdf-canvas, #pdf-canvas-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    background-color: white;
+  }
+
+  .pdf-text-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0.0;
+    pointer-events: none;
+  }
+
+  .pdf-text-item {
+    position: absolute;
+    white-space: pre-wrap;
+    pointer-events: auto;
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+  }
+
+  .view-toggle-btn {
+    padding: 6px 12px;
+    background-color: #ddd;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .view-toggle-btn.active {
+    background-color: #333;
+    color: white;
+  }
+
+
+  /* --- カルーセル(横スライド)の見た目・位置*/
+  .pdf-carousel-wrapper {
+  position: relative;
+}
+
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.carousel-prev {
+  left: 10px;
+}
+
+.carousel-next {
+  right: 10px;
+}
+
+</style>
+</head>
+
+<body data-page="pdf">
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+    <div id="header-nav"></div>
+    <button id="menu-toggle" aria-label="メニュー">☰</button>
+  </nav>
+</header>
+
+<main>
+  <div class="pdf-container">
+    <div class="pdf-header">
+      <h1>ShihoPress</h1>
+      <p>重要な資料やお知らせはこちらからご覧いただけます</p>
+    </div>
+
+    <div class="pdf-list" id="pdf-list"></div>
+
+    <div id="empty-state" class="empty-state" style="display: none;">
+      <div class="empty-state-icon">📄</div>
+      <p>PDFファイルはまだ登録されていません</p>
+    </div>
+
+    <div id="pdf-viewer" class="pdf-viewer">
+      <div class="pdf-viewer-header">
+        <h2 id="pdf-title" class="pdf-viewer-title">PDF ドキュメント</h2>
+        <button id="pdf-close-btn" class="pdf-viewer-close">✕</button>
+      </div>
+
+      <div class="pdf-viewer-controls">
+        <button class="pdf-controls-btn" id="pdf-prev-btn">前へ</button>
+        <div class="pdf-page-info">
+          <span id="pdf-current-page">1</span> / <span id="pdf-total-pages">1</span>
+        </div>
+        <button class="pdf-controls-btn" id="pdf-next-btn">次へ</button>
+        <button class="pdf-controls-btn" id="pdf-zoom-in-btn">拡大</button>
+        <button class="pdf-controls-btn" id="pdf-zoom-out-btn">縮小</button>
+        <a id="pdf-download-btn" class="pdf-controls-btn" style="text-decoration: none; cursor: pointer; display: inline-block;">ダウンロード</a>
+        
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" id="text-view-btn">テキスト表示</button>
+          <button class="view-toggle-btn" id="image-view-btn">画像表示</button>
+        </div>
+        
+        <button class="pdf-controls-btn pdf-back-btn" id="pdf-back-btn">ShihoPressに戻る</button>
+      </div>
+
+      <div class="pdf-viewer-body">
+        <div id="text-view" class="pdf-page-container">
+          <div class="pdf-canvas-container">
+            <canvas id="pdf-canvas"></canvas>
+            <div id="pdf-text-layer" class="pdf-text-layer"></div>
+          </div>
+        </div>
+
+        <div id="image-view" class="pdf-page-container" style="display: none;">
+          <canvas id="pdf-canvas-image"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="src/header.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let currentPdf = null;
+let currentPageNum = 1;
+let currentScale = 1.5;
+let currentViewMode = 'text';
+let carouselIndices = {};
+let carouselTotalSlides = {};
+let itemsPerView = 1;
+
+// --- サムネイル生成関数 (16:9クロップ対応) ---
+async function generateThumbnail(pdfPath, canvasId) {
+  try {
+    const loadingTask = pdfjsLib.getDocument(pdfPath);
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const context = canvas.getContext('2d');
+    
+    // サムネイル用にスケールを少し高めにして描画（object-fit: coverで拡大されるため）
+    const viewport = page.getViewport({ scale: 0.6 });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    await page.render({ canvasContext: context, viewport: viewport }).promise;
+    
+    // ローディング文字を消す
+    const loader = canvas.parentElement.querySelector('.thumb-loading-text');
+    if (loader) loader.remove();
+  } catch (e) {
+    console.error("Thumbnail error:", e);
+    const canvas = document.getElementById(canvasId);
+    if(canvas) canvas.parentElement.innerHTML = '<span style="color:#ccc; font-size:24px;">📄</span>';
+  }
+}
+
+function updateItemsPerView() {
+  if (window.innerWidth >= 1024) itemsPerView = 3;
+  else if (window.innerWidth >= 768) itemsPerView = 2;
+  else itemsPerView = 1;
+}
+
+function updateCarousel(year) {
+  const section = document.querySelector(`[data-carousel-year="${year}"]`);
+  if (!section) return;
+
+  const inner = section.querySelector('.pdf-carousel-inner');
+  const items = section.querySelectorAll('.pdf-item');
+  const totalSlides = carouselTotalSlides[year] || items.length;
+  let carouselIndex = carouselIndices[year] || 0;
+
+  carouselIndices[year] = carouselIndex;
+
+  const itemWidth = 100 / itemsPerView;
+  const offset = (itemsPerView - 1) / 2;
+  const translatePercent = -(carouselIndex - offset) * itemWidth;
+
+  inner.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+  inner.style.transform = `translateX(${translatePercent}%)`;
+
+  items.forEach((item, index) => {
+    item.classList.toggle('center', index === carouselIndex);
+  });
+
+  const dots = section.querySelectorAll('.carousel-dots .dot');
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('active', index === carouselIndex);
+  });
+}
+
+
+function goToSlide(year, index) {
+  carouselIndices[year] = index;
+  updateCarousel(year);
+}
+
+function handlePrevClick(year) {
+  const total = carouselTotalSlides[year];
+  carouselIndices[year] = (carouselIndices[year] - 1 + total) % total;
+  updateCarousel(year);
+}
+
+function handleNextClick(year) {
+  const total = carouselTotalSlides[year];
+  carouselIndices[year] = (carouselIndices[year] + 1) % total;
+  updateCarousel(year);
+}
+
+
+async function loadPDFs() {
+  try {
+    const response = await fetch('/api/pdfs');
+    if (!response.ok) throw new Error('API Error');
+    const pdfs = await response.json();
+    renderPDFCarousel(pdfs);
+  } catch (error) {
+    // テストデータ
+    const testPdfs = [
+      { id: 1, title: 'サンプルPDF 1', description: '2026年の活動報告書', file_path: '/sample.pdf', created_at: new Date(2026, 0, 15).toISOString() },
+      { id: 2, title: 'サンプルPDF 2', description: '2025年冬期お知らせ', file_path: '/sample.pdf', created_at: new Date(2025, 11, 25).toISOString() },
+      { id: 3, title: 'サンプルPDF 3', description: 'プレスリリース資料', file_path: '/sample.pdf', created_at: new Date(2025, 10, 30).toISOString() }
+    ];
+    renderPDFCarousel(testPdfs);
+  }
+}
+
+function renderPDFCarousel(pdfs) {
+  const pdfList = document.getElementById('pdf-list');
+  const emptyState = document.getElementById('empty-state');
+  if (!pdfs.length) { emptyState.style.display = 'block'; return; }
+  emptyState.style.display = 'none';
+  
+  const groupedByYear = {};
+  pdfs.forEach(pdf => {
+    const year = new Date(pdf.created_at).getFullYear();
+    if (!groupedByYear[year]) groupedByYear[year] = [];
+    groupedByYear[year].push(pdf);
+  });
+  
+  const years = Object.keys(groupedByYear).sort((a, b) => b - a);
+  
+  pdfList.innerHTML = years.map(year => {
+    const yearPdfs = groupedByYear[year];
+    carouselTotalSlides[year] = yearPdfs.length;
+    carouselIndices[year] = 0;
+    
+    return `
+      <div class="pdf-year-section" data-carousel-year="${year}">
+        <div class="pdf-carousel-wrapper">
+          <div class="pdf-year-title">${year}年</div>
+          <div class="pdf-carousel">
+            <button class="carousel-nav carousel-prev" onclick="handlePrevClick('${year}')">❮</button>
+            <div class="pdf-carousel-inner">
+              ${yearPdfs.map((pdf, idx) => {
+                const canvasId = `thumb-${year}-${idx}`;
+                // レンダリングを少し遅延させてUIスレッドを確保
+                setTimeout(() => generateThumbnail(pdf.file_path, canvasId), 100);
+                
+                return `
+                <div class="pdf-item">
+                  <div class="pdf-thumbnail-box" onclick="openPDF('${pdf.file_path}', '${pdf.title.replace(/'/g, "\\'")}', '${pdf.id}')">
+                    <span class="thumb-loading-text">Loading...</span>
+                    <canvas id="${canvasId}" class="pdf-thumbnail-canvas"></canvas>
+                  </div>
+                  <h3 onclick="openPDF('${pdf.file_path}', '${pdf.title.replace(/'/g, "\\'")}', '${pdf.id}')">${pdf.title}</h3>
+                  ${pdf.description ? `<p>${pdf.description}</p>` : ''}
+                  <div class="pdf-item-meta">
+                    アップロード: ${new Date(pdf.created_at).toLocaleDateString('ja-JP')}
+                  </div>
+                  <div class="pdf-actions">
+                    <button class="pdf-btn" onclick="openPDF('${pdf.file_path}', '${pdf.title.replace(/'/g, "\\'")}', '${pdf.id}')">テキスト表示</button>
+                    <a href="${pdf.file_path}" class="pdf-btn pdf-btn-secondary" download>ダウンロード</a>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+            <button class="carousel-nav carousel-next" onclick="handleNextClick('${year}')">❯</button>
+          </div>
+          <div class="carousel-dots">
+            ${yearPdfs.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide('${year}', ${i})"></div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  years.forEach(year => updateCarousel(year));
+}
+
+async function openPDF(filePath, title, pdfId) {
+  try {
+    const pdf = await pdfjsLib.getDocument(filePath).promise;
+    currentPdf = pdf;
+    currentPageNum = 1;
+    document.getElementById('pdf-title').textContent = title;
+    document.getElementById('pdf-total-pages').textContent = pdf.numPages;
+    document.getElementById('pdf-download-btn').href = filePath;
+    document.getElementById('pdf-viewer').classList.add('show');
+    renderPage(1);
+  } catch (error) {
+    alert('PDFを開けませんでした');
+  }
+}
+
+async function renderPage(pageNum) {
+  if (!currentPdf) return;
+  currentPageNum = pageNum;
+  document.getElementById('pdf-current-page').textContent = pageNum;
+  
+  const page = await currentPdf.getPage(pageNum);
+  const scale = currentScale;
+  const viewport = page.getViewport({ scale });
+  
+  const canvasId = currentViewMode === 'text' ? 'pdf-canvas' : 'pdf-canvas-image';
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  document.querySelector('.pdf-canvas-container').style.width = viewport.width + 'px';
+
+  await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+  if (currentViewMode === 'text') {
+    const textLayer = document.getElementById('pdf-text-layer');
+    textLayer.innerHTML = '';
+    textLayer.style.width = canvas.width + 'px';
+    textLayer.style.height = canvas.height + 'px';
+    const textContent = await page.getTextContent();
+    pdfjsLib.renderTextLayer({
+      textContent: textContent,
+      container: textLayer,
+      viewport: viewport,
+      textDivs: []
+    });
+  }
+  
+  document.getElementById('pdf-prev-btn').disabled = pageNum <= 1;
+  document.getElementById('pdf-next-btn').disabled = pageNum >= currentPdf.numPages;
+}
+
+function updateViewMode() {
+  const isText = currentViewMode === 'text';
+  document.getElementById('text-view').style.display = isText ? 'block' : 'none';
+  document.getElementById('image-view').style.display = isText ? 'none' : 'block';
+  document.getElementById('text-view-btn').classList.toggle('active', isText);
+  document.getElementById('image-view-btn').classList.toggle('active', !isText);
+  renderPage(currentPageNum);
+}
+
+// イベント
+document.getElementById('pdf-close-btn').onclick = 
+document.getElementById('pdf-back-btn').onclick = () => {
+  document.getElementById('pdf-viewer').classList.remove('show');
+  currentPdf = null;
+};
+
+document.getElementById('pdf-prev-btn').onclick = () => renderPage(currentPageNum - 1);
+document.getElementById('pdf-next-btn').onclick = () => renderPage(currentPageNum + 1);
+document.getElementById('pdf-zoom-in-btn').onclick = () => { currentScale += 0.1; renderPage(currentPageNum); };
+document.getElementById('pdf-zoom-out-btn').onclick = () => { if(currentScale > 0.5) currentScale -= 0.1; renderPage(currentPageNum); };
+document.getElementById('text-view-btn').onclick = () => { currentViewMode = 'text'; updateViewMode(); };
+document.getElementById('image-view-btn').onclick = () => { currentViewMode = 'image'; updateViewMode(); };
+
+window.addEventListener('resize', () => {
+  updateItemsPerView();
+  Object.keys(carouselIndices).forEach(updateCarousel);
+});
+
+updateItemsPerView();
+loadPDFs();
+</script>
+</body>
+</html>

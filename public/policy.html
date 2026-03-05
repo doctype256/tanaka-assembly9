@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>活動報告 | 田中しほ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="src/style.css">
+  <style>
+        body {
+        background-color: #7DA4CD;
+        }
+
+        .activity{
+        background-color: #F5F7FA;
+        }
+
+        /* カテゴリフィルタボタンUI最適化 */
+        #category-filter {
+          margin-bottom: 8px;
+        }
+        .category-btn {
+          padding: 7px 18px;
+          border-radius: 20px;
+          border: 1.5px solid #03709b;
+          background: #fff;
+          color: #03709b;
+          font-weight: bold;
+          font-size: 1rem;
+          transition: background 0.2s, color 0.2s, border 0.2s;
+          cursor: pointer;
+          outline: none;
+          box-shadow: 0 1px 2px rgba(3,112,155,0.04);
+        }
+        .category-btn:hover {
+          background: #e6f6fb;
+          color: #02506e;
+          border-color: #02506e;
+        }
+        .category-btn.is-active {
+          background: #03709b;
+          color: #fff;
+          border-color: #03709b;
+          box-shadow: 0 2px 8px rgba(3,112,155,0.10);
+        }
+        @media (max-width: 600px) {
+          .category-btn {
+            font-size: 0.95rem;
+            padding: 6px 10px;
+          }
+          #category-filter {
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+        }
+    .activity-grid {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    #carousel-root {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .pdf-carousel-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      width: 100%;
+    }
+    .pdf-carousel-inner {
+      justify-content: flex-start;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .pdf-carousel-wrapper { position: relative; width: 100%; overflow: hidden; padding: 20px 0; }
+    .pdf-carousel { width: 100%; position: relative; overflow: visible; }
+    .pdf-carousel-inner { display: flex; transition: transform 0.5s ease; will-change: transform; }
+
+    .pdf-item { 
+      flex: 0 0 33.333%; 
+      box-sizing: border-box; 
+      padding: 0 10px; 
+      cursor: pointer; 
+      transition: transform 0.4s ease, opacity 0.4s ease; 
+    }
+
+    .pdf-item.center { 
+      transform: scale(0.9); 
+      opacity: 1; 
+      z-index: 2;
+    }
+
+    /* ホバー時に拡大する */
+    .pdf-item:hover { 
+      transform: scale(1) !important; 
+      z-index: 5; 
+    }
+
+    .pdf-year-title.is-continuation { font-size: 1.5rem; opacity: 1.0; margin-top: -10px; }
+
+    #menu-toggle { z-index: 101; }
+    .pdf-viewer { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index:999; flex-direction: column; }
+    .pdf-viewer.show { display:flex; }
+    .pdf-viewer-header { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#fff; color:#000; }
+    .pdf-viewer-body { flex:1; display:flex; justify-content:center; align-items:center; overflow:auto; background:#333; }
+    .pdf-page-container { display:flex; justify-content:center; align-items:center; }
+    .pdf-viewer-close { cursor:pointer; }
+    .pdf-viewer-controls { display:flex; justify-content:center; align-items:center; gap:5px; margin:5px 0; flex-wrap:wrap; }
+    .pdf-controls-btn { padding:5px 10px; cursor:pointer; color:#000; background:#fff; border:none; text-decoration:none; }
+
+    .report-thumb { width: 100%; height: 200px; background:#f3f3f3; border-radius:4px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .pdf-thumb-canvas { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+
+    /* =========================
+   📱 スマホ最適化（PCは崩さない）
+    ========================= */
+    @media (max-width: 768px) {
+
+    /* 横はみ出し防止 */
+    html, body {
+      overflow-x: hidden;
+    }
+
+    .activity-grid {
+      padding: 0 10px;
+    }
+
+    /* 1枚表示 */
+    .pdf-item {
+      flex: 0 0 85%;
+      padding: 0 6px;
+    }
+
+    /* 中央拡大を無効化（暴れ防止） */
+    .pdf-item.center {
+      transform: scale(1);
+    }
+
+    .pdf-item:hover {
+      transform: scale(1);
+    }
+
+    /* サムネサイズ微調整 */
+    .report-thumb {
+      height: 180px;
+    }
+
+    .pdf-item h3 {
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .pdf-item-meta {
+      font-size: 0.8rem;
+    }
+
+    /* ナビボタンを中央寄せ */
+    .carousel-prev,
+    .carousel-next {
+      top: 45%;
+      transform: translateY(-50%);
+      font-size: 22px;
+    }
+
+    /* ドット間隔 */
+    .carousel-dots {
+      margin-top: 10px;
+    }
+
+    /* スマホ時のカルーセル中央寄せ */
+    @media (max-width: 768px) {
+    .article-detail-photos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden; /* ← スクロールを無効化して中央寄せを優先 */
+    }
+
+    .article-detail-photos img {
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto; /* ← 中央寄せの決定打 */
+      display: block;
+    }
+    /* カルーセルの横スクロールを安定させる */
+    .article-detail-photos {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .article-detail-photos img {
+      scroll-snap-align: center;
+      flex-shrink: 0;
+      width: 100%;
+      height: auto;
+    }
+}
+}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body data-page="activity">
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+    <div id="header-nav"></div>
+    <button id="menu-toggle" aria-label="メニュー">☰</button>
+  </nav>
+</header>
+
+<main class="activity">
+
+  <div class="activity-grid">
+    <h1 class="activity-title" id="activity-title" style="margin-bottom:18px; text-align:center;">活動報告</h1>
+    <div style="margin: 0 0 18px 0; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+      <div id="category-filter" style="display: flex; gap: 8px;">
+        <button type="button" class="category-btn is-active" data-category="all">すべて</button>
+        <button type="button" class="category-btn" data-category="report">活動報告</button>
+        <button type="button" class="category-btn" data-category="pdf">ShihoPress</button>
+      </div>
+      <label for="year-select" style="font-weight:bold; margin-right: 6px;">年代で絞り込み</label>
+      <select id="year-select" style="padding: 6px 12px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">すべて</option>
+      </select>
+    </div>
+    <div id="carousel-root"></div>
+  </div>
+
+  <!-- PDF VIEWER -->
+  <div id="pdf-viewer" class="pdf-viewer">
+    <div class="pdf-viewer-header">
+      <h2 id="pdf-title" class="pdf-viewer-title">PDF ドキュメント</h2>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button id="pdf-close-btn" class="pdf-viewer-close">✕</button>
+      </div>
+    </div>
+
+    <div class="pdf-viewer-controls">
+      <button class="pdf-controls-btn" id="pdf-prev-btn">前へ</button>
+      <div class="pdf-page-info">
+        <span id="pdf-current-page">1</span> /
+        <span id="pdf-total-pages">1</span>
+      </div>
+      <button class="pdf-controls-btn" id="pdf-next-btn">次へ</button>
+      <button class="pdf-controls-btn" id="pdf-zoom-in-btn">拡大</button>
+      <button class="pdf-controls-btn" id="pdf-zoom-out-btn">縮小</button>
+      <span style="display:inline-flex; gap:0; align-items:center;">
+        <a id="pdf-download-btn" class="pdf-controls-btn" style="border-top-right-radius:0;border-bottom-right-radius:0;">ダウンロード</a>
+        <button class="pdf-controls-btn pdf-back-btn" id="pdf-back-btn-bottom" style="margin-left:0; border-top-left-radius:0; border-bottom-left-radius:0; background:#ff6b9d; color:#fff; border:1px solid #ff6b9d; font-weight:bold;">元のページに戻る</button>
+      </span>
+    </div>
+
+    <div class="pdf-viewer-body">
+      <div class="pdf-page-container">
+        <canvas id="pdf-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="js/activity-reports.js"></script>
+<script>
+// 戻るボタン（下部）でPDFビューアを閉じる
+document.addEventListener('DOMContentLoaded', () => {
+  const backBtn = document.getElementById('pdf-back-btn-bottom');
+  if (backBtn) {
+    backBtn.onclick = () => {
+      document.getElementById('pdf-viewer').classList.remove('show');
+      currentPdf = null;
+    };
+  }
+});
+let activeCategory = 'all';
+let activeYear = null;
+let activityData = null;
+let carouselIndices = {};
+let carouselTotalSlides = {};
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function generateThumbnail(pdfPath, canvasId) {
+  try {
+    const loadingTask = pdfjsLib.getDocument(pdfPath);
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 0.6 });
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+  } catch (e) {
+    console.error('サムネイル生成エラー:', e);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+      // カテゴリボタンのイベント
+      const categoryFilter = document.getElementById('category-filter');
+      if (categoryFilter) {
+        categoryFilter.addEventListener('click', e => {
+          const btn = e.target.closest('.category-btn');
+          if (!btn) return;
+          document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('is-active'));
+          btn.classList.add('is-active');
+          const cat = btn.getAttribute('data-category');
+          activeCategory = cat;
+          render(true);
+        });
+      }
+    // 年代ドロップリストのセットアップ
+    const yearSelect = document.getElementById('year-select');
+    yearSelect.addEventListener('change', function() {
+      activeYear = this.value ? Number(this.value) : null;
+      render(true);
+    });
+  const checkDB = setInterval(async () => {
+    if (typeof fetchActivityReports === 'function') {
+      clearInterval(checkDB);
+
+      const reports = await fetchActivityReports();
+      const pdfs = await fetch('/api/pdfs').then(r => r.json()).catch(() => []);
+
+      const formattedPDFs = pdfs.map(p => ({
+        id: p.id,
+        title: p.title,
+        year: new Date(p.created_at).getFullYear(),
+        month: new Date(p.created_at).getMonth() + 1,
+        created_at: p.created_at,
+        category: 'pdf',
+        type: 'pdf',
+        file_path: p.file_path
+      }));
+
+      activityData = { 
+        categories: [
+          { id: 'report', label: '活動報告' },
+          { id: 'pdf', label: 'ShihoPress' }
+        ],
+        reports: [...reports, ...formattedPDFs].sort((a, b) => b.year - a.year)
+      };
+
+      render();
+    }
+  }, 100);
+});
+
+function renderInChunks(title, items, keyPrefix = '') {
+  let chunkIndex = 0;
+
+  for (let i = 0; i < items.length; i += 7) {
+    const key = keyPrefix ? `${keyPrefix}-chunk-${i}` : `chunk-${i}`;
+    chunkIndex++;
+
+    let displayTitle = title;
+
+    // 2つ目以降は連番
+    if (chunkIndex > 1) {
+      displayTitle = `${title}${chunkIndex}`;
+    }
+
+    renderCarousel(
+      key,
+      displayTitle,
+      items.slice(i, i + 7),
+      i > 0
+    );
+  }
+}
+
+function render(scrollTop = false) {
+
+  if (!activityData) return;
+
+  const root = document.getElementById('carousel-root');
+  root.innerHTML = '';
+  carouselIndices = {};
+
+  const yearSelect = document.getElementById('year-select');
+  if (yearSelect) {
+    const years = [...new Set(activityData.reports.map(r => r.year))].sort((a,b)=>b-a);
+    yearSelect.innerHTML =
+      '<option value="">すべて</option>' +
+      years.map(y => `<option value="${y}" ${activeYear==y?'selected':''}>${y}年</option>`).join('');
+  }
+
+  let filtered = [...activityData.reports];
+
+  if (activeCategory === 'report') {
+    filtered = filtered.filter(r => r.category !== 'pdf');
+  }
+
+  if (activeCategory === 'pdf') {
+    filtered = filtered.filter(r => r.category === 'pdf');
+  }
+
+  if (activeYear) {
+    filtered = filtered.filter(r => r.year === activeYear);
+  }
+
+  const sortByDate = (a,b) => {
+    const getDate = x => new Date(x.updated_at || x.created_at || `${x.year}-01-01`);
+    return getDate(b) - getDate(a);
+  };
+
+  filtered.sort(sortByDate);
+
+  // ==========================
+  // ⭐ 年代絞り込みあり → 分割
+  // ==========================
+  if (activeYear) {
+
+    if (activeCategory === 'all') {
+
+      const reports = filtered.filter(r => r.category !== 'pdf');
+      const pdfs = filtered.filter(r => r.category === 'pdf');
+
+      if (reports.length) renderInChunks('活動報告', reports, 'reports');
+      if (pdfs.length) renderInChunks('ShihoPress', pdfs, 'pdfs');
+
+    } else {
+
+      const title = activeCategory === 'pdf'
+        ? 'ShihoPress'
+        : '活動報告';
+
+      if (filtered.length) renderInChunks(title, filtered, 'filtered');
+    }
+
+  }
+
+  // ==========================
+  // ⭐ 年代なし → 1カルーセルのみ
+  // ==========================
+  else {
+
+  const reports = filtered
+    .filter(r => r.category !== 'pdf')
+    .sort(sortByDate);
+
+  const pdfs = filtered
+    .filter(r => r.category === 'pdf')
+    .sort(sortByDate);
+
+  // ==========================
+  // ⭐ すべて → 1カルーセル（最大7件）
+  // ==========================
+  if (activeCategory === 'all') {
+
+    const reports7 = reports.slice(0, 7);
+    const pdfs7 = pdfs.slice(0, 7);
+
+    if (reports7.length) renderCarousel('reports', '活動報告', reports7);
+    if (pdfs7.length) renderCarousel('pdfs', 'ShihoPress', pdfs7);
+  }
+
+  // ==========================
+  // ⭐ 活動報告のみ → 分割
+  // ==========================
+  if (activeCategory === 'report') {
+    if (reports.length) renderInChunks('活動報告', reports, 'reports');
+  }
+
+  // ==========================
+  // ⭐ ShihoPressのみ → 分割
+  // ==========================
+  if (activeCategory === 'pdf') {
+    if (pdfs.length) renderInChunks('ShihoPress', pdfs, 'pdfs');
+  }
+
+}
+
+  if (scrollTop) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderCarousel(key, title, items, isContinuation = false) {
+  carouselTotalSlides[key] = items.length;
+  carouselIndices[key] = 0;
+
+  const section = document.createElement('div');
+  section.className = 'pdf-year-section';
+  section.setAttribute('data-carousel-year', key);
+
+  section.innerHTML = `
+    <h2 class="pdf-year-title ${isContinuation ? 'is-continuation' : ''}">${title}</h2>
+    <div class="pdf-carousel-wrapper">
+      <div class="pdf-carousel">
+        <button class="carousel-nav carousel-prev" onclick="handlePrevClickIndex('${key}')">❮</button>
+        <div class="pdf-carousel-inner">
+          ${items.map((r, idx) => {
+            const canvasId = `thumb-${key}-${idx}`;
+            const isPDF = r.type === 'pdf';
+            setTimeout(() => isPDF && generateThumbnail(r.file_path, canvasId), 50);
+            // 年月の取得
+            let yyyymm = '';
+            // 年月を必ず表示（年・月がなければcreated_at/updated_atから取得）
+            let year, month;
+            if (isPDF && r.created_at) {
+              const d = new Date(r.created_at);
+              year = d.getFullYear();
+              month = d.getMonth() + 1;
+            } else if (r.updated_at) {
+              const d = new Date(r.updated_at);
+              year = d.getFullYear();
+              month = d.getMonth() + 1;
+            } else if (r.created_at) {
+              const d = new Date(r.created_at);
+              year = d.getFullYear();
+              month = d.getMonth() + 1;
+            } else if (r.year && r.month) {
+              year = r.year;
+              month = r.month;
+            } else if (r.year) {
+              year = r.year;
+              month = '';
+            }
+            if (year && month) {
+              yyyymm = `${year}年${month}月`;
+            } else if (year) {
+              yyyymm = `${year}年`;
+            }
+            return `
+            <div class="pdf-item" onclick="${isPDF ? `openPDF('${r.file_path}', '${r.title.replace(/'/g,"\\'")}')` : `location.href='article.html?type=report&id=${r.id}'`}">
+              <div class="report-thumb">
+                ${
+                  isPDF
+                    ? `<canvas id="${canvasId}" class="pdf-thumb-canvas"></canvas>`
+                    : `<img src="${(r.photos && r.photos[0]) ? r.photos[0] : ''}" onerror="this.src='https://placehold.jp/24/03709b/ffffff/300x200.png?text=No+Photo'">`
+                }
+              </div>
+              <div class="pdf-item-meta">
+                <span class="report-meta-year">${yyyymm}</span>
+              </div>
+              <h3>${r.title}</h3>
+              <div class="pdf-actions">
+                ${
+                  isPDF
+                    ? `<span class="pdf-btn">開く</span>
+                       <a href="${r.file_path}" download class="pdf-btn" onclick="event.stopPropagation()">ダウンロード</a>`
+                    : `<span class="pdf-btn">詳細を見る</span>`
+                }
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <button class="carousel-nav carousel-next" onclick="handleNextClickIndex('${key}')">❯</button>
+      </div>
+      <div class="carousel-dots">
+        ${items.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlideIndex('${key}', ${i})"></div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('carousel-root').appendChild(section);
+  setTimeout(() => updateCarouselIndex(key), 50);
+}
+
+function updateCarouselIndex(key) {
+  const section = document.querySelector(`[data-carousel-year="${key}"]`);
+  if (!section) return;
+  const inner = section.querySelector('.pdf-carousel-inner');
+  const pdfItems = section.querySelectorAll('.pdf-item');
+  const index = carouselIndices[key];
+
+  const isMobile = window.innerWidth < 768;
+  const itemWidth = isMobile ? 88 : 33.333;
+  const offset = (100 - itemWidth) / 2;
+  const moveX = (index * itemWidth) - offset;
+  inner.style.transform = `translateX(${-moveX}%)`;
+  
+  pdfItems.forEach((item, i) => { item.classList.toggle('center', i === index); });
+  const dots = section.querySelectorAll('.dot');
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+}
+
+window.handlePrevClickIndex = key => { carouselIndices[key] = (carouselIndices[key] > 0) ? carouselIndices[key] - 1 : carouselTotalSlides[key] - 1; updateCarouselIndex(key); };
+window.handleNextClickIndex = key => { carouselIndices[key] = (carouselIndices[key] < carouselTotalSlides[key] - 1) ? carouselIndices[key] + 1 : 0; updateCarouselIndex(key); };
+window.goToSlideIndex = (key, idx) => { carouselIndices[key] = idx; updateCarouselIndex(key); };
+
+function renderSidebarButtons() {
+  // サイドバー削除のため空関数化
+}
+
+window.addEventListener('resize', () => Object.keys(carouselIndices).forEach(updateCarouselIndex));
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  // サイドバー削除のため、カテゴリ・年ボタンの処理も削除
+});
+
+let currentPdf = null, currentPageNum = 1, currentScale = 1.5;
+
+async function openPDF(filePath, title) {
+  const pdf = await pdfjsLib.getDocument(filePath).promise;
+  currentPdf = pdf; currentPageNum = 1;
+  document.getElementById('pdf-title').textContent = title;
+  document.getElementById('pdf-total-pages').textContent = pdf.numPages;
+  document.getElementById('pdf-download-btn').href = filePath;
+  document.getElementById('pdf-viewer').classList.add('show');
+  renderPage(1);
+}
+
+async function renderPage(pageNum) {
+  if (!currentPdf) return;
+  currentPageNum = pageNum;
+  document.getElementById('pdf-current-page').textContent = pageNum;
+  const page = await currentPdf.getPage(pageNum);
+  const viewport = page.getViewport({ scale: currentScale });
+  const canvas = document.getElementById('pdf-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = viewport.width; canvas.height = viewport.height;
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  document.getElementById('pdf-prev-btn').disabled = pageNum <= 1;
+  document.getElementById('pdf-next-btn').disabled = pageNum >= currentPdf.numPages;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('pdf-close-btn');
+  if (closeBtn) closeBtn.onclick = () => { document.getElementById('pdf-viewer').classList.remove('show'); currentPdf = null; };
+
+  const backBtn = document.getElementById('pdf-back-btn');
+  if (backBtn) backBtn.onclick = () => { document.getElementById('pdf-viewer').classList.remove('show'); currentPdf = null; };
+
+  const prevBtn = document.getElementById('pdf-prev-btn');
+  if (prevBtn) prevBtn.onclick = () => renderPage(currentPageNum - 1);
+
+  const nextBtn = document.getElementById('pdf-next-btn');
+  if (nextBtn) nextBtn.onclick = () => renderPage(currentPageNum + 1);
+
+  const zoomInBtn = document.getElementById('pdf-zoom-in-btn');
+  if (zoomInBtn) zoomInBtn.onclick = () => { currentScale += 0.1; renderPage(currentPageNum); };
+
+  const zoomOutBtn = document.getElementById('pdf-zoom-out-btn');
+  if (zoomOutBtn) zoomOutBtn.onclick = () => { if (currentScale > 0.5) currentScale -= 0.1; renderPage(currentPageNum); };
+});
+</script>
+
+<script src="src/header.js"></script>
+
+
+<!-- ここから下はポップアップ画面を呼び出すための指示　20260304追加-->
+<div id="modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div class="modal-responsive" style="background:white; width:90%; max-width:600px; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; background:#4682B4; color:white;">
+      <span style="font-size:1.1rem;font-weight:bold;">ご相談フォーム</span>
+      <button id="closeModalBtn" style="background:none; border:none; font-size:32px; color:white; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <iframe src="/consultation" id="consultationIframe" style="width:100%; border:none; min-height:450px;"></iframe>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const modal = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeModalBtn");
+    const iframe = document.getElementById("consultationIframe");
+
+    // --- 1. モーダルを開く関数（グローバル化してヘッダー等から呼べるようにする） ---
+    window.openConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "flex";
+        window.parent.postMessage("HTML_MODAL_OPEN", "*");
+      }
+    };
+
+    // --- 2. モーダルを閉じる関数 ---
+    window.closeConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "none";
+        window.parent.postMessage("HTML_MODAL_CLOSE", "*");
+      }
+    };
+
+    // --- 3. イベントリスナーの設定 ---
+    // 閉じるボタン
+    if (closeBtn) closeBtn.onclick = window.closeConsultationModal;
+
+    // 背景クリックで閉じる
+    modal.onclick = function(e) {
+      if (e.target === modal) window.closeConsultationModal();
+    };
+
+    // 既存のバナーボタン (id="openModalBtn") があれば連動させる
+    const bannerBtn = document.getElementById("openModalBtn");
+    if (bannerBtn) {
+      bannerBtn.onclick = function(e) {
+        e.preventDefault();
+        window.openConsultationModal();
+      };
+    }
+
+    // --- 4. iframe送信完了時の自動クローズ処理 ---
+    window.addEventListener("message", function(event) {
+      if (event.data === "CONSULTATION_SUBMITTED") {
+        setTimeout(window.closeConsultationModal, 2000);
+      }
+      
+      // 高さ調整
+      if (event.data.type === 'SET_HEIGHT') {
+        const finalHeight = Math.max(event.data.height, 450);
+        iframe.style.height = (finalHeight + 20) + 'px';
+      }
+    });
+  })();
+</script> 
+
+<!-- ポップアップ追加のための指示20260304 終了-->
+
+
+
+
+
+</body>
+</html>

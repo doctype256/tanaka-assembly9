@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活動詳細 | 田中しほ</title>
+  <link rel="stylesheet" href="src/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    #menu-toggle { z-index: 101; }
+
+    .article-year {
+      color: #666;
+      font-size: 0.95rem;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+    body {
+      background-color: #7DA4CD;
+    }
+  </style>
+</head>
+
+<body data-page="article">
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+    <div id="header-nav"></div>
+    <button id="menu-toggle" aria-label="メニュー">☰</button>
+  </nav>
+</header>
+
+<main class="container">
+  <article class="article-content-wrapper">
+
+    <h1 id="article-title" class="article-detail-title"></h1>
+    <p id="article-year" class="article-year"></p>
+
+    <div id="article-content" class="article-detail-body"></div>
+    <div id="article-photos" class="article-detail-photos"></div>
+
+    <div class="back-link-area">
+      <a href="policy.html" class="back-button">活動報告一覧へ戻る</a>
+    </div>
+
+  </article>
+</main>
+
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (id) {
+      renderActivityReportDetail(id);
+    } else {
+      alert('記事IDが指定されていません。');
+    }
+  });
+
+  async function renderActivityReportDetail(id) {
+    try {
+      const response = await fetch(`/api/activity-reports?id=${id}`);
+      if (!response.ok) throw new Error('記事の取得に失敗しました。');
+      
+      const data = await response.json();
+      if (data.success && data.reports && data.reports.length > 0) {
+        const article = data.reports[0];
+
+        document.getElementById('article-title').innerText = article.title;
+        document.getElementById('article-year').innerText = `${article.year}年`;
+        // 改行を<br>に変換して表示
+        if (article.items) {
+          const content = article.items.map(item =>
+            typeof item === 'string' ? item.replace(/\n/g, '<br>') : ''
+          ).join('<br><br>');
+          document.getElementById('article-content').innerHTML = content;
+        } else {
+          document.getElementById('article-content').innerHTML = '';
+        }
+
+        const photoContainer = document.getElementById('article-photos');
+        photoContainer.innerHTML = '';
+        if (article.photos && article.photos.length > 0) {
+          article.photos.forEach(photo => {
+            const img = document.createElement('img');
+            // Cloudinary等の外部URLはそのまま、assets/で始まる場合のみローカルパス
+            if (/^https?:\/\//.test(photo)) {
+              img.src = photo;
+            } else if (photo.startsWith('assets/')) {
+              img.src = `/${photo}`;
+            } else {
+              img.src = `/assets/${photo}`;
+            }
+            img.alt = `Photo for ${article.title}`;
+            photoContainer.appendChild(img);
+          });
+        }
+
+      } else {
+        alert('指定された記事が見つかりませんでした。');
+      }
+    } catch (error) {
+      console.error('記事の取得に失敗しました:', error);
+    }
+  }
+</script>
+
+<script>
+// コメント取得関数を独立（401エラー対策のログを追加）
+async function loadComments(title) {
+  const commentList = document.getElementById('comment-list');
+  try {
+    const adminPassword = sessionStorage.getItem('adminPassword') || '';
+    // パスワードがある時だけクエリに含める
+    let url = `/api/comments?article_title=${encodeURIComponent(title)}`;
+    if (adminPassword) {
+      url += `&password=${encodeURIComponent(adminPassword)}`;
+    }
+    const commentRes = await fetch(url);
+    if (commentRes.ok) {
+      const comments = await commentRes.json();
+      if (Array.isArray(comments) && comments.length > 0) {
+        commentList.innerHTML = comments.map(comment => `
+          <div class="comment-bubble">
+            <div class="comment-name">${comment.name || '匿名'}さん</div>
+            <div class="comment-message">${comment.message}</div>
+          </div>
+        `).join('');
+      } else {
+        commentList.innerHTML = '<p>まだコメントはありません。最初の感想をお寄せください。</p>';
+      }
+    } else {
+      // ここで 401 が出なくなります
+      commentList.innerHTML = '<p>コメントを表示できませんでした。</p>';
+    }
+  } catch (e) {
+    console.error('コメント取得エラー:', e);
+  }
+}
+</script>
+  <script src="src/header.js"></script>
+
+
+<!-- ここから下はポップアップ画面を呼び出すための指示　20260304追加-->
+<div id="modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div class="modal-responsive" style="background:white; width:90%; max-width:600px; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; background:#4682B4; color:white;">
+      <span style="font-size:1.1rem;font-weight:bold;">ご相談フォーム</span>
+      <button id="closeModalBtn" style="background:none; border:none; font-size:32px; color:white; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <iframe src="/consultation" id="consultationIframe" style="width:100%; border:none; min-height:450px;"></iframe>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const modal = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeModalBtn");
+    const iframe = document.getElementById("consultationIframe");
+
+    // --- 1. モーダルを開く関数（グローバル化してヘッダー等から呼べるようにする） ---
+    window.openConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "flex";
+        window.parent.postMessage("HTML_MODAL_OPEN", "*");
+      }
+    };
+
+    // --- 2. モーダルを閉じる関数 ---
+    window.closeConsultationModal = function() {
+      if (modal) {
+        modal.style.display = "none";
+        window.parent.postMessage("HTML_MODAL_CLOSE", "*");
+      }
+    };
+
+    // --- 3. イベントリスナーの設定 ---
+    // 閉じるボタン
+    if (closeBtn) closeBtn.onclick = window.closeConsultationModal;
+
+    // 背景クリックで閉じる
+    modal.onclick = function(e) {
+      if (e.target === modal) window.closeConsultationModal();
+    };
+
+    // 既存のバナーボタン (id="openModalBtn") があれば連動させる
+    const bannerBtn = document.getElementById("openModalBtn");
+    if (bannerBtn) {
+      bannerBtn.onclick = function(e) {
+        e.preventDefault();
+        window.openConsultationModal();
+      };
+    }
+
+    // --- 4. iframe送信完了時の自動クローズ処理 ---
+    window.addEventListener("message", function(event) {
+      if (event.data === "CONSULTATION_SUBMITTED") {
+        setTimeout(window.closeConsultationModal, 2000);
+      }
+      
+      // 高さ調整
+      if (event.data.type === 'SET_HEIGHT') {
+        const finalHeight = Math.max(event.data.height, 450);
+        iframe.style.height = (finalHeight + 20) + 'px';
+      }
+    });
+  })();
+</script> 
+
+<!-- ポップアップ追加のための指示20260304 終了-->
+
+
+
+
+
+
+
+
+</body>
+</html>

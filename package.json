@@ -1,0 +1,52 @@
+{
+  "name": "temp10",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "vercel": "vercel",
+    "vercel-dev": "vercel dev"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "@simplewebauthn/browser": "^13.2.2",
+    "@simplewebauthn/server": "^13.2.3",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.5.0",
+    "cloudinary": "^2.9.0",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.6.0",
+    "iron-session": "^8.0.4",
+    "next": "^16.1.6",
+    "next-auth": "^4.24.13",
+    "nodemailer": "^8.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "resend": "^6.9.2",
+    "streamifier": "^0.1.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.30",
+    "@types/nodemailer": "^7.0.9",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@vercel/node": "^3.0.0",
+    "autoprefixer": "^10.4.22",
+    "baseline-browser-mapping": "^2.9.18",
+    "concurrently": "^9.0.0",
+    "dotenv": "^17.3.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vercel": "^49.1.2",
+    "vite": "^5.4.21"
+  }
+}

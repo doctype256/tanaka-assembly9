@@ -1,0 +1,16 @@
+node_modules/
+dist/
+
+.vercel
+.env*.local
+local.db
+*.db
+
+# Next.js のビルド成果物を無視
+.next/
+# 依存ライブラリを無視
+node_modules/
+# キャッシュなどを無視
+.turbo/
+# ログ管理
+logs/

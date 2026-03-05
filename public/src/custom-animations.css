@@ -1,0 +1,28 @@
+/* animate-fade-in-down が適用される要素の初期状態 */
+.animate-fade-in-down {
+    /* アニメーションが始まるまでは透明にする */
+    opacity: 0; 
+    /* アニメーションの開始位置に要素を移動しておく */
+    transform: translateY(-20px);
+}
+
+/* animate-fade-in-up が適用される要素の初期状態 */
+.animate-fade-in-up {
+    /* アニメーションが始まるまでは透明にする */
+    opacity: 0; 
+    /* アニメーションの開始位置に要素を移動しておく */
+    transform: translateY(20px);
+}
+
+/* animate-fade-in が適用される要素の初期状態 */
+.animate-fade-in {
+    opacity: 0; 
+}
+
+/* すべてのアニメーションに適用：アニメーション終了後も最終状態（opacity: 1, transform: none）を保持 */
+.animate-fade-in,
+.animate-fade-in-down,
+.animate-fade-in-up,
+.animate-slide-down {
+    animation-fill-mode: forwards; 
+}

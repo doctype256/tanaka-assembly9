@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理パネル | トップページ編集</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #ffffff; }
+        .bg-instagram { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* ドラッグオーバー時のスタイル */
+        #drop-area.drag-over { border-color: #6366f1; background-color: #f5f3ff; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+<div class="max-w-6xl mx-auto py-8 px-4">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-12 border-b pb-8">
+        <div class="flex items-center gap-6">
+            <h1 class="text-xl font-bold tracking-[0.2em] text-slate-900">管理パネル</h1>
+            <div class="flex bg-stone-100 rounded-full p-1">
+                <button id="undo-btn" class="p-2 rounded-full hover:bg-white disabled:opacity-20 transition-all" title="元に戻す"><i data-lucide="undo-2" class="w-5 h-5"></i></button>
+                <button id="redo-btn" class="p-2 rounded-full hover:bg-white disabled:opacity-20 transition-all" title="やり直し"><i data-lucide="redo-2" class="w-5 h-5"></i></button>
+            </div>
+        </div>
+        <div class="flex bg-stone-100 rounded-2xl p-1 shadow-inner">
+            <button id="edit-mode-btn" class="px-8 py-2.5 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-slate-800">編集モード</button>
+            <button id="preview-mode-btn" class="px-8 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-slate-600">プレビュー反映</button>
+        </div>
+    </div>
+
+    <div id="edit-section" class="max-w-2xl mx-auto space-y-10 fade-in">
+        
+        <section class="space-y-4">
+            <label class="text-[11px] font-bold text-slate-500 tracking-widest uppercase ml-1">【 ヒーロー画像 】</label>
+            <div id="drop-area" class="border-2 border-dashed border-stone-200 rounded-[2rem] p-10 text-center cursor-pointer hover:bg-stone-50 transition-all">
+                <input type="file" id="file-input" accept="image/*" class="hidden">
+                <div id="drop-text" class="text-xs text-stone-300 italic">画像をアップロード / ドラッグ＆ドロップ</div>
+                <img id="preview-img" src="" class="hidden mx-auto max-h-48 rounded-xl object-contain shadow-sm bg-white pointer-events-none">
+            </div>
+            <input type="hidden" id="heroImg">
+        </section>
+
+        <section class="space-y-6">
+            <div class="space-y-2">
+                <label class="text-[11px] font-bold text-slate-500 tracking-widest uppercase ml-1">所在地（住所）</label>
+                <p class="text-[10px] text-rose-400 ml-1 mb-2 font-bold">※Googleマップで表示される住所をコピーしてそのまま貼り付けてください。</p>
+                <input type="text" id="address" class="w-full p-4 rounded-2xl bg-stone-50 border-none text-sm outline-none focus:ring-2 focus:ring-stone-200" placeholder="例：東京都千代田区永田町１丁目７−１">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[11px] font-bold text-slate-500 tracking-widest uppercase ml-1">YouTube 動画URL</label>
+                <input type="text" id="ytUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full p-4 rounded-2xl bg-stone-50 border-none text-sm outline-none focus:ring-2 focus:ring-stone-200">
+            </div>
+        </section>
+
+        <section class="pt-6 border-t">
+            <div class="flex items-center justify-between mb-4">
+                <label class="text-[11px] font-bold text-slate-500 tracking-widest uppercase">公式SNSリンク</label>
+                <button type="button" id="add-sns-btn" class="text-[10px] font-bold text-rose-400 hover:text-rose-500 uppercase">+ SNSを追加</button>
+            </div>
+            <div id="sns-list" class="space-y-3"></div>
+        </section>
+
+        <button id="submit-btn" class="w-full bg-slate-900 text-white text-xs font-bold tracking-[0.4em] py-6 rounded-2xl shadow-xl hover:bg-slate-800 transition-all">
+            設定を保存して公開する
+        </button>
+    </div>
+
+    <div id="preview-section" class="hidden fade-in border border-stone-100 rounded-[3rem] overflow-hidden shadow-2xl h-[85vh] bg-white">
+        <iframe id="preview-frame" src="index.html" class="w-full h-full border-0"></iframe>
+    </div>
+</div>
+
+<div id="status" class="hidden"></div>
+
+<script>
+    /**
+     * StateManager: 履歴管理（変更なし）
+     */
+    const StateManager = {
+        history: [], step: -1,
+        save() {
+            const state = {
+                address: document.getElementById('address').value,
+                ytUrl: document.getElementById('ytUrl').value,
+                heroImg: document.getElementById('heroImg').value,
+                sns: Array.from(document.querySelectorAll('#sns-list > div')).map(item => ({
+                    platform: item.querySelector('.sns-platform').value,
+                    url: item.querySelector('.sns-url').value
+                }))
+            };
+            if (this.step >= 0 && JSON.stringify(state) === JSON.stringify(this.history[this.step])) return;
+            this.history = this.history.slice(0, this.step + 1);
+            this.history.push(state);
+            this.step++; 
+            this.updateButtons();
+        },
+        undo() { if (this.step > 0) this.apply(this.history[--this.step]); },
+        redo() { if (this.step < this.history.length - 1) this.apply(this.history[++this.step]); },
+        apply(state) {
+            document.getElementById('address').value = state.address || '';
+            document.getElementById('ytUrl').value = state.ytUrl || '';
+            document.getElementById('heroImg').value = state.heroImg || '';
+            const pImg = document.getElementById('preview-img');
+            if (state.heroImg) { pImg.src = state.heroImg; pImg.classList.remove('hidden'); document.getElementById('drop-text').classList.add('hidden'); }
+            else { pImg.classList.add('hidden'); document.getElementById('drop-text').classList.remove('hidden'); }
+            const list = document.getElementById('sns-list'); list.innerHTML = '';
+            state.sns.forEach(s => list.appendChild(AdminUI.createSnsItem(s.platform, s.url, false)));
+            lucide.createIcons(); this.updateButtons();
+        },
+        updateButtons() {
+            document.getElementById('undo-btn').disabled = this.step <= 0;
+            document.getElementById('redo-btn').disabled = this.step >= this.history.length - 1;
+        }
+    };
+
+    /**
+     * AdminUI: フォーム生成（変更なし）
+     */
+    const AdminUI = {
+        snsConfig: {
+            'Instagram': { icon: 'instagram', class: 'bg-instagram' },
+            'Facebook': { icon: 'facebook', class: 'bg-[#1877F2]' },
+            'X': { icon: 'twitter', class: 'bg-black' },
+            'TikTok': { icon: 'music', class: 'bg-black' },
+            'LINE': { icon: 'message-circle', class: 'bg-[#06C755]' }
+        },
+        createSnsItem(platform = 'Instagram', url = '', autoSave = true) {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-3 bg-stone-50 p-3 rounded-2xl border border-stone-100 shadow-sm';
+            div.innerHTML = `
+                <div class="sns-box w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm ${this.snsConfig[platform].class}">
+                    <i data-lucide="${this.snsConfig[platform].icon}" class="w-4 h-4"></i>
+                </div>
+                <select class="sns-platform bg-white border-none rounded-xl p-2 text-[10px] font-bold outline-none cursor-pointer">
+                    ${Object.keys(this.snsConfig).map(p => `<option value="${p}" ${platform === p ? 'selected' : ''}>${p}</option>`).join('')}
+                </select>
+                <input type="text" class="sns-url flex-1 bg-white border-none rounded-xl p-2 text-xs outline-none shadow-sm" placeholder="URLを入力" value="${url}">
+                <button type="button" class="btn-remove text-stone-300 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            `;
+            const select = div.querySelector('.sns-platform');
+            select.onchange = (e) => {
+                const val = e.target.value;
+                const box = div.querySelector('.sns-box');
+                box.className = `sns-box w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm ${this.snsConfig[val].class}`;
+                box.innerHTML = `<i data-lucide="${this.snsConfig[val].icon}" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+                StateManager.save();
+            };
+            div.querySelector('.sns-url').onblur = () => StateManager.save();
+            div.querySelector('.btn-remove').onclick = () => { div.remove(); StateManager.save(); };
+            if (autoSave) StateManager.save();
+            return div;
+        }
+    };
+
+    /**
+     * AdminManager: 全体制御
+     */
+    const AdminManager = {
+        init() {
+            this.setupEventListeners();
+            this.loadInitialData();
+            document.getElementById('address').addEventListener('blur', () => StateManager.save());
+        },
+
+        setupEventListeners() {
+            document.getElementById('undo-btn').onclick = () => StateManager.undo();
+            document.getElementById('redo-btn').onclick = () => StateManager.redo();
+            document.getElementById('add-sns-btn').onclick = () => {
+                document.getElementById('sns-list').appendChild(AdminUI.createSnsItem());
+                lucide.createIcons();
+            };
+            
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('file-input');
+
+            // クリックでのアップロード
+            dropArea.onclick = () => fileInput.click();
+            fileInput.onchange = (e) => this.uploadFile(e.target.files[0]);
+
+            // --- ドラッグ＆ドロップ機能の追加ここから ---
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            dropArea.addEventListener('dragover', () => dropArea.classList.add('drag-over'), false);
+            dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'), false);
+            
+            dropArea.addEventListener('drop', (e) => {
+                dropArea.classList.remove('drag-over');
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    this.uploadFile(file);
+                }
+            }, false);
+            // --- ドラッグ＆ドロップ機能の追加ここまで ---
+
+            document.getElementById('preview-mode-btn').onclick = () => this.showPreview();
+            document.getElementById('edit-mode-btn').onclick = () => this.showEdit();
+            document.getElementById('submit-btn').onclick = () => this.submitData();
+        },
+
+        async uploadFile(file) {
+            if (!file) return;
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+                const res = await fetch('/api/top-page/upload', { method: 'POST', body: fd });
+                const result = await res.json();
+                if (res.ok) {
+                    document.getElementById('heroImg').value = result.url;
+                    const pi = document.getElementById('preview-img');
+                    pi.src = result.url; pi.classList.remove('hidden');
+                    document.getElementById('drop-text').classList.add('hidden');
+                    StateManager.save();
+                }
+            } catch (err) { console.error(err); }
+        },
+
+        showPreview() {
+            const payload = {
+                address: document.getElementById('address').value,
+                ytUrl: document.getElementById('ytUrl').value,
+                heroImg: document.getElementById('heroImg').value,
+                snsJson: JSON.stringify(Array.from(document.querySelectorAll('#sns-list > div')).map(item => ({
+                    platform: item.querySelector('.sns-platform').value,
+                    url: item.querySelector('.sns-url').value
+                })))
+            };
+            const iframe = document.getElementById('preview-frame');
+            iframe.contentWindow.postMessage({ type: 'LIVE_PREVIEW_UPDATE', payload }, '*');
+            document.getElementById('edit-section').classList.add('hidden');
+            document.getElementById('preview-section').classList.remove('hidden');
+        },
+
+        showEdit() {
+            document.getElementById('edit-section').classList.remove('hidden');
+            document.getElementById('preview-section').classList.add('hidden');
+        },
+
+        async submitData() {
+            const data = {
+                heroImg: document.getElementById('heroImg').value,
+                address: document.getElementById('address').value,
+                ytUrl: document.getElementById('ytUrl').value,
+                snsJson: JSON.stringify(Array.from(document.querySelectorAll('#sns-list > div')).map(item => ({
+                    platform: item.querySelector('.sns-platform').value,
+                    url: item.querySelector('.sns-url').value
+                })).filter(s => s.url))
+            };
+            try {
+                const res = await fetch('/api/top-page', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) {
+                    const s = document.getElementById('status');
+                    s.innerText = "✅ 設定を保存しました";
+                    s.className = "fixed bottom-10 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full shadow-2xl font-bold text-xs z-50 bg-slate-900 text-white fade-in";
+                    s.classList.remove('hidden');
+                    setTimeout(() => s.classList.add('hidden'), 3000);
+                }
+            } catch (err) { alert("保存に失敗しました"); }
+        },
+
+        async loadInitialData() {
+            try {
+                const res = await fetch('/api/top-page');
+                const data = await res.json();
+                document.getElementById('address').value = data.address || '';
+                document.getElementById('ytUrl').value = data.ytUrl || '';
+                document.getElementById('heroImg').value = data.heroImg || '';
+                if (data.heroImg) {
+                    const pi = document.getElementById('preview-img');
+                    pi.src = data.heroImg; pi.classList.remove('hidden');
+                    document.getElementById('drop-text').classList.add('hidden');
+                }
+                const list = document.getElementById('sns-list');
+                const snsData = JSON.parse(data.snsJson || "[]");
+                if(snsData.length) snsData.forEach(s => list.appendChild(AdminUI.createSnsItem(s.platform, s.url, false)));
+                else list.appendChild(AdminUI.createSnsItem('Instagram', '', false));
+                lucide.createIcons();
+                StateManager.save();
+            } catch (err) { console.error(err); }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => AdminManager.init());
+</script>
+</body>
+</html>

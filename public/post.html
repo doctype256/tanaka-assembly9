@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ご相談フォーム</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+
+  <style>
+    /* フォームコンテナの論理的修正：枠感を排除 */
+    .form-container {
+      width: 100%;
+      max-width: 100%; /* 600px制限を解除 */
+      margin: 0 auto;
+      background-color: transparent;
+      border: none;
+      box-shadow: none;
+      overflow: hidden; /* 親側の不要なバーを防止 */
+    }
+
+    /* iframeの制御：スクロールバーの徹底排除 */
+    iframe {
+      width: 100%;
+      height: 950px; /* ステップが進んでも入り切る高さを確保 */
+      border: none;
+      display: block;
+      overflow: hidden; /* スクロールバー非表示 */
+    }
+
+    .contact-section {
+      padding: 40px 0;
+      background-color: #ffffff;
+      min-height: calc(100vh - 80px);
+    }
+
+    .contact-title {
+      text-align: center;
+      margin-bottom: 10px;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 2rem;
+      color: #2d3748;
+    }
+
+    .contact-text {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      color: #718096;
+      font-size: 16px;
+      padding: 0 20px;
+    }
+  </style>
+</head>
+
+<body data-page="contact">
+
+<header>
+  <nav class="header-inner">
+    <div id="header-name"></div>
+    <div id="header-nav"></div>
+    <button id="menu-toggle" aria-label="メニュー">☰</button>
+  </nav>
+</header>
+
+<main>
+  <section class="contact-section">
+    <h1 class="contact-title">ご相談フォーム</h1>
+    <p class="contact-text">
+      以下のステップに沿って、あなたのお悩みを聞かせてください。
+    </p>
+
+    <div class="form-container">
+      <iframe src="/consultation" title="相談フォーム" scrolling="no"></iframe>
+    </div>
+  </section>
+</main>
+
+<script>
+  fetch('/data/static-texts.json')
+    .then(res => res.json())
+    .then(data => {
+      if (data.rinen && data.rinen.name) {
+        document.getElementById('header-name').textContent = data.rinen.name;
+      }
+    });
+
+  window.addEventListener('message', (event) => {
+    if (event.data === 'CONSULTATION_SUBMITTED') {
+      console.log('Submission received in parent.');
+    }
+  });
+</script>
+
+<script src="/src/header.js"></script>
+</body>
+</html>

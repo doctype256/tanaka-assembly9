@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>プライバシーポリシー</title>
+</head>
+<body>
+
+  <h1 id="privacy-title"></h1>
+  <p id="privacy-text"></p>
+  <p id="privacy-text2"></p>
+
+  <div id="privacy-sections"></div>
+
+  <script>
+    fetch("data.json")
+      .then(response => response.json())
+      .then(data => {
+
+        const privacy = data["privacy-policy"];
+
+        document.getElementById("privacy-title").textContent = privacy.title;
+        document.getElementById("privacy-text").textContent = privacy.text;
+        document.getElementById("privacy-text2").textContent = privacy.text2;
+
+        const container = document.getElementById("privacy-sections");
+
+        privacy.privacy.forEach(section => {
+
+          const sectionDiv = document.createElement("div");
+
+          const title = document.createElement("h2");
+          title.textContent = section.title;
+          sectionDiv.appendChild(title);
+
+          if (section.text) {
+            const text = document.createElement("p");
+            text.textContent = section.text;
+            sectionDiv.appendChild(text);
+          }
+
+          if (section.texts) {
+            const ul = document.createElement("ul");
+            section.texts.forEach(item => {
+              const li = document.createElement("li");
+              li.textContent = item;
+              ul.appendChild(li);
+            });
+            sectionDiv.appendChild(ul);
+          }
+
+          if (section.text2) {
+            const text2 = document.createElement("p");
+            text2.textContent = section.text2;
+            sectionDiv.appendChild(text2);
+          }
+
+          container.appendChild(sectionDiv);
+        });
+
+      })
+      .catch(error => {
+        console.error("データの読み込みに失敗しました:", error);
+      });
+  </script>
+
+</body>
+</html>
