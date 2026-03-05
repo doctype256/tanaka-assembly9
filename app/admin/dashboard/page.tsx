@@ -24,27 +24,19 @@ export default function AdminDashboard() {
   }, []);
 
   const menuItems = [
-    // 既存機能
-    {
-      title: "📩 相談内容の確認",
-      description: "市民から届いた相談（暗号化済み）の閲覧・管理を行います。",
-      path: "/admin/consultations",
-      color: "#0070f3"
-    },
-    {
-      title: "🛡️ セキュリティ・認証管理",
-      description: "パスキー登録・復旧コード管理を行います。",
-      path: "/admin/settings/devices",
-      color: "#2D3748"
-    },
-    {
-      title: "📋 システム操作履歴",
-      description: "管理者操作ログ・不正アクセス遮断履歴を確認します。",
-      path: "/admin/audit-logs",
-      color: "#38A169"
-    },
-
     // CMS機能
+    {
+      title: "TOPページ編集",
+      description: "TOPページの内容を編集します。",
+      path: "/admin/homepage-edit",
+      color: "#D53F8C"
+    },
+    {
+      title: "👤 自己紹介編集",
+      description: "プロフィールおよび経歴情報を編集します。",
+      path: "/admin/introduction-edit",
+      color: "#DD6B20"
+    },
     {
       title: "📝 活動報告編集",
       description: "活動報告の投稿・編集・削除を行います。",
@@ -57,12 +49,25 @@ export default function AdminDashboard() {
       path: "/admin/shihoPress-edit",
       color: "#805AD5"
     },
+    // 既存機能
     {
-      title: "👤 自己紹介編集",
-      description: "プロフィールおよび経歴情報を編集します。",
-      path: "/admin/introduction-edit",
-      color: "#DD6B20"
-    }
+      title: "📩 相談内容の確認",
+      description: "市民から届いた相談（暗号化済み）の閲覧・管理を行います。",
+      path: "/admin/consultations",
+      color: "#0070f3"
+    },
+    {
+      title: "🛡️ セキュリティ・認証管理",
+      description: "パスキー登録・管理を行います。",
+      path: "/admin/settings/devices",
+      color: "#2D3748"
+    },
+    // {
+    //   title: "📋 システム操作履歴",
+    //   description: "管理者操作ログ・不正アクセス遮断履歴を確認します。",
+    //   path: "/admin/audit-logs",
+    //   color: "#38A169"
+    // },
   ];
 
   return (

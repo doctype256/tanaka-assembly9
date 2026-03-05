@@ -5,7 +5,7 @@ export default function TopPageEdit() {
     <div id="top-page-edit" className="tab-content">
       <div className="card">
         <h2>トップページ編集</h2>
-        <p>画像、住所、SNSリンクなどの基本情報を編集します。</p>
+        <p>住所、SNSリンクなどの基本情報を編集します。</p>
 
         <div style={{ marginTop: "20px" }}>
           <a

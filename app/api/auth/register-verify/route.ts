@@ -1,29 +1,20 @@
-// directory: app/api/auth/register-verify/route.ts
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
-import { isoBase64URL } from '@simplewebauthn/server/helpers';
-import { client } from '@/db/client.ts';
+import { client } from '@/db/client';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
-    // 【論理的重要点】リクエストヘッダーから現在のドメインを動的に取得
     const headersList = await headers();
     const host = headersList.get('host') || 'localhost';
-    
-    // プロトコル（httpsかhttpか）を判定
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const expectedOrigin = `${protocol}://${host}`;
     const expectedRPID = host.split(':')[0];
 
-    // 本来はセッション等からチャレンジを取得するが、実装に合わせてbodyから取得
-    const expectedChallenge = body.challenge;
-
     const verification = await verifyRegistrationResponse({
       response: body,
-      expectedChallenge,
+      expectedChallenge: body.challenge,
       expectedOrigin,
       expectedRPID,
       requireUserVerification: true,
@@ -32,29 +23,29 @@ export async function POST(req: Request) {
     const { verified, registrationInfo } = verification;
 
     if (verified && registrationInfo) {
-      const { credential } = registrationInfo;
+      const info = (registrationInfo as any).credential; 
+      
+      // 🚨 【ここを修正】toString('base64url') を削除し、生のバイナリ(Uint8Array)を渡す
+      // ログイン側が以前動いていたなら、DBはバイナリを期待しています。
+      const rawCredentialID = info.id;       // Uint8Array のまま
+      const rawPublicKey = info.publicKey;   // Uint8Array のまま
 
-      // データベースへの保存（オブジェクト指向的整合性）
       await client.execute({
-        sql: `INSERT INTO authenticators (id, credential_id, public_key, counter, user_id) 
-              VALUES (?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO authenticators (id, credential_id, user_id, public_key, counter) VALUES (?, ?, ?, ?, ?)`,
         args: [
-          body.id,
-          isoBase64URL.toBuffer(credential.id), 
-          credential.publicKey, 
-          credential.counter,
-          'admin-001' // テスト用固定ID
+          body.id,             // id (フロントエンドから送られてくる一意のID)
+          rawCredentialID,     // credential_id (BLOB列にバイナリとして保存)
+          'admin-001',         // user_id
+          rawPublicKey,        // public_key (BLOB列にバイナリとして保存)
+          info.counter         // counter
         ]
       });
 
       return NextResponse.json({ verified: true });
     }
-
-    return NextResponse.json({ verified: false, error: '検証に失敗しました。' }, { status: 400 });
-
+    return NextResponse.json({ verified: false, error: '検証失敗' }, { status: 400 });
   } catch (error: any) {
-    console.error("❌ Verification Error:", error);
-    // 確実にJSONを返すことでフロント側のSyntaxErrorを防ぐ
+    console.error("❌ Register Error:", error);
     return NextResponse.json({ verified: false, error: error.message }, { status: 500 });
   }
 }

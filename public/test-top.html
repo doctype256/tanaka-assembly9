@@ -9,11 +9,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #ffffff; }
-        .bg-instagram { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* ドラッグオーバー時のスタイル */
-        #drop-area.drag-over { border-color: #6366f1; background-color: #f5f3ff; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -35,16 +32,6 @@
 
     <div id="edit-section" class="max-w-2xl mx-auto space-y-10 fade-in">
         
-        <section class="space-y-4">
-            <label class="text-[11px] font-bold text-slate-500 tracking-widest uppercase ml-1">【 ヒーロー画像 】</label>
-            <div id="drop-area" class="border-2 border-dashed border-stone-200 rounded-[2rem] p-10 text-center cursor-pointer hover:bg-stone-50 transition-all">
-                <input type="file" id="file-input" accept="image/*" class="hidden">
-                <div id="drop-text" class="text-xs text-stone-300 italic">画像をアップロード / ドラッグ＆ドロップ</div>
-                <img id="preview-img" src="" class="hidden mx-auto max-h-48 rounded-xl object-contain shadow-sm bg-white pointer-events-none">
-            </div>
-            <input type="hidden" id="heroImg">
-        </section>
-
         <section class="space-y-6">
             <div class="space-y-2">
                 <label class="text-[11px] font-bold text-slate-500 tracking-widest uppercase ml-1">所在地（住所）</label>
@@ -80,7 +67,7 @@
 
 <script>
     /**
-     * StateManager: 履歴管理（変更なし）
+     * StateManager: 履歴管理
      */
     const StateManager = {
         history: [], step: -1,
@@ -88,7 +75,6 @@
             const state = {
                 address: document.getElementById('address').value,
                 ytUrl: document.getElementById('ytUrl').value,
-                heroImg: document.getElementById('heroImg').value,
                 sns: Array.from(document.querySelectorAll('#sns-list > div')).map(item => ({
                     platform: item.querySelector('.sns-platform').value,
                     url: item.querySelector('.sns-url').value
@@ -105,10 +91,6 @@
         apply(state) {
             document.getElementById('address').value = state.address || '';
             document.getElementById('ytUrl').value = state.ytUrl || '';
-            document.getElementById('heroImg').value = state.heroImg || '';
-            const pImg = document.getElementById('preview-img');
-            if (state.heroImg) { pImg.src = state.heroImg; pImg.classList.remove('hidden'); document.getElementById('drop-text').classList.add('hidden'); }
-            else { pImg.classList.add('hidden'); document.getElementById('drop-text').classList.remove('hidden'); }
             const list = document.getElementById('sns-list'); list.innerHTML = '';
             state.sns.forEach(s => list.appendChild(AdminUI.createSnsItem(s.platform, s.url, false)));
             lucide.createIcons(); this.updateButtons();
@@ -120,7 +102,7 @@
     };
 
     /**
-     * AdminUI: フォーム生成（変更なし）
+     * AdminUI: フォーム生成
      */
     const AdminUI = {
         snsConfig: {
@@ -176,62 +158,15 @@
                 document.getElementById('sns-list').appendChild(AdminUI.createSnsItem());
                 lucide.createIcons();
             };
-            
-            const dropArea = document.getElementById('drop-area');
-            const fileInput = document.getElementById('file-input');
-
-            // クリックでのアップロード
-            dropArea.onclick = () => fileInput.click();
-            fileInput.onchange = (e) => this.uploadFile(e.target.files[0]);
-
-            // --- ドラッグ＆ドロップ機能の追加ここから ---
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }, false);
-            });
-
-            dropArea.addEventListener('dragover', () => dropArea.classList.add('drag-over'), false);
-            dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'), false);
-            
-            dropArea.addEventListener('drop', (e) => {
-                dropArea.classList.remove('drag-over');
-                const dt = e.dataTransfer;
-                const file = dt.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    this.uploadFile(file);
-                }
-            }, false);
-            // --- ドラッグ＆ドロップ機能の追加ここまで ---
-
             document.getElementById('preview-mode-btn').onclick = () => this.showPreview();
             document.getElementById('edit-mode-btn').onclick = () => this.showEdit();
             document.getElementById('submit-btn').onclick = () => this.submitData();
-        },
-
-        async uploadFile(file) {
-            if (!file) return;
-            const fd = new FormData();
-            fd.append('file', file);
-            try {
-                const res = await fetch('/api/top-page/upload', { method: 'POST', body: fd });
-                const result = await res.json();
-                if (res.ok) {
-                    document.getElementById('heroImg').value = result.url;
-                    const pi = document.getElementById('preview-img');
-                    pi.src = result.url; pi.classList.remove('hidden');
-                    document.getElementById('drop-text').classList.add('hidden');
-                    StateManager.save();
-                }
-            } catch (err) { console.error(err); }
         },
 
         showPreview() {
             const payload = {
                 address: document.getElementById('address').value,
                 ytUrl: document.getElementById('ytUrl').value,
-                heroImg: document.getElementById('heroImg').value,
                 snsJson: JSON.stringify(Array.from(document.querySelectorAll('#sns-list > div')).map(item => ({
                     platform: item.querySelector('.sns-platform').value,
                     url: item.querySelector('.sns-url').value
@@ -250,7 +185,6 @@
 
         async submitData() {
             const data = {
-                heroImg: document.getElementById('heroImg').value,
                 address: document.getElementById('address').value,
                 ytUrl: document.getElementById('ytUrl').value,
                 snsJson: JSON.stringify(Array.from(document.querySelectorAll('#sns-list > div')).map(item => ({
@@ -276,12 +210,6 @@
                 const data = await res.json();
                 document.getElementById('address').value = data.address || '';
                 document.getElementById('ytUrl').value = data.ytUrl || '';
-                document.getElementById('heroImg').value = data.heroImg || '';
-                if (data.heroImg) {
-                    const pi = document.getElementById('preview-img');
-                    pi.src = data.heroImg; pi.classList.remove('hidden');
-                    document.getElementById('drop-text').classList.add('hidden');
-                }
                 const list = document.getElementById('sns-list');
                 const snsData = JSON.parse(data.snsJson || "[]");
                 if(snsData.length) snsData.forEach(s => list.appendChild(AdminUI.createSnsItem(s.platform, s.url, false)));

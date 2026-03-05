@@ -25,13 +25,13 @@ export default async function AdminDashboard() {
       icon: "📩",
       color: "bg-blue-50"
     },
-    {
-      title: "監査ログ確認",
-      description: "誰がいつログインしたか、どのような操作を行ったかの履歴を確認します。",
-      href: "/admin/audit-logs",
-      icon: "📜",
-      color: "bg-gray-50"
-    },
+    // {
+    //   title: "監査ログ確認",
+    //   description: "誰がいつログインしたか、どのような操作を行ったかの履歴を確認します。",
+    //   href: "/admin/audit-logs",
+    //   icon: "📜",
+    //   color: "bg-gray-50"
+    // },
     {
       title: "生体認証設定",
       description: "ログインに使用する顔認証デバイスの追加登録や管理を行います。",
