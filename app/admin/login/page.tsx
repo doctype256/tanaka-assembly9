@@ -1,13 +1,22 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [biometricAvailable, setBiometricAvailable] = useState(false); // 生体認証対応判定
   const router = useRouter();
+
+  // クライアントで端末に生体認証があるかチェック
+  useEffect(() => {
+    (async () => {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      setBiometricAvailable(available);
+    })();
+  }, []);
 
   // 管理画面と同じCSRF取得ロジック
   const getCsrfToken = () => {
@@ -19,6 +28,12 @@ export default function LoginPage() {
   };
 
   const handleAuthAction = async () => {
+    if (!biometricAvailable) {
+      setStatus('error');
+      setMessage('❌ この端末では生体認証が利用できません。対応端末でお試しください。');
+      return;
+    }
+
     setStatus('loading');
     setMessage('ステータスを確認中...');
 
@@ -28,7 +43,7 @@ export default function LoginPage() {
       const { isEnrolled } = await checkRes.json();
 
       if (!isEnrolled) {
-        // --- 【新規登録フロー】(管理画面の handleRegister と同じロジック) ---
+        // --- 【新規登録フロー】 ---
         setMessage('初回デバイス登録を開始します...');
         const optionsRes = await fetch('/api/auth/register-options');
         const options = await optionsRes.json();
@@ -41,7 +56,6 @@ export default function LoginPage() {
             'Content-Type': 'application/json', 
             'x-csrf-token': getCsrfToken() 
           },
-          // 管理画面と全く同じ body の組み立て方にする
           body: JSON.stringify({ ...regResponse, challenge: options.challenge }),
         });
 
@@ -66,7 +80,6 @@ export default function LoginPage() {
             'Content-Type': 'application/json', 
             'x-csrf-token': getCsrfToken() 
           },
-          // ログインも同様の形式で送信
           body: JSON.stringify({ ...authResponse, challenge: options.challenge }),
         });
 
@@ -104,14 +117,16 @@ export default function LoginPage() {
       <div style={sectionStyle}>
         <button
           onClick={handleAuthAction}
-          disabled={status === 'loading'}
+          disabled={status === 'loading' || !biometricAvailable}
           style={{ 
             ...primaryButtonStyle, 
             backgroundColor: status === 'success' ? '#28a745' : '#333',
-            cursor: status === 'loading' ? 'not-allowed' : 'pointer'
+            cursor: status === 'loading' || !biometricAvailable ? 'not-allowed' : 'pointer'
           }}
         >
-          {status === 'loading' ? '処理中...' : '生体認証を開始'}
+          {status === 'loading' 
+            ? '処理中...' 
+            : (biometricAvailable ? '生体認証を開始' : 'この端末では登録不可')}
         </button>
       </div>
 
@@ -129,7 +144,7 @@ export default function LoginPage() {
   );
 }
 
-// スタイルは以前のものと同じ
+// スタイル
 const containerStyle: React.CSSProperties = { padding: '80px 20px', maxWidth: '400px', margin: '0 auto', textAlign: 'center' };
 const titleStyle: React.CSSProperties = { fontSize: '24px', fontWeight: 'bold', marginBottom: '40px' };
 const sectionStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '15px' };

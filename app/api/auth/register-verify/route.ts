@@ -17,32 +17,46 @@ export async function POST(req: Request) {
       expectedChallenge: body.challenge,
       expectedOrigin,
       expectedRPID,
-      requireUserVerification: true,
+      requireUserVerification: true, // 生体認証必須
     });
 
     const { verified, registrationInfo } = verification;
 
     if (verified && registrationInfo) {
-      const info = (registrationInfo as any).credential; 
-      
-      // 🚨 【ここを修正】toString('base64url') を削除し、生のバイナリ(Uint8Array)を渡す
-      // ログイン側が以前動いていたなら、DBはバイナリを期待しています。
-      const rawCredentialID = info.id;       // Uint8Array のまま
-      const rawPublicKey = info.publicKey;   // Uint8Array のまま
+      // ----------------------------
+      // パスキー（resident key）禁止チェック
+      // ----------------------------
+      // registrationInfo は @simplewebauthn/server の型に沿って確認
+      // residentKey が 'required' ならパスキー扱いとして弾く
+      if ((registrationInfo as any).residentKey === 'required') {
+        throw new Error('❌ パスキーは使用できません。生体認証のみ登録してください。');
+      }
+
+      // 内蔵型認証器以外も弾く場合
+      if ((registrationInfo as any).credentialDeviceType !== 'platform') {
+        throw new Error('❌ 内蔵デバイス以外は使用できません。');
+      }
+
+      const info = (registrationInfo as any).credential;
+
+      // 生のバイナリをDBに保存
+      const rawCredentialID = info.id;       // Uint8Array
+      const rawPublicKey = info.publicKey;   // Uint8Array
 
       await client.execute({
         sql: `INSERT INTO authenticators (id, credential_id, user_id, public_key, counter) VALUES (?, ?, ?, ?, ?)`,
         args: [
-          body.id,             // id (フロントエンドから送られてくる一意のID)
-          rawCredentialID,     // credential_id (BLOB列にバイナリとして保存)
-          'admin-001',         // user_id
-          rawPublicKey,        // public_key (BLOB列にバイナリとして保存)
-          info.counter         // counter
+          body.id,
+          rawCredentialID,
+          'admin-001',
+          rawPublicKey,
+          info.counter
         ]
       });
 
       return NextResponse.json({ verified: true });
     }
+
     return NextResponse.json({ verified: false, error: '検証失敗' }, { status: 400 });
   } catch (error: any) {
     console.error("❌ Register Error:", error);
