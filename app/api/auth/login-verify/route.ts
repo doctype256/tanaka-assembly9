@@ -1,9 +1,11 @@
+///ログイン処理
+
 // directory: app/api/auth/login-verify/route.ts
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers';
-import { client } from '@/db/client.ts';
+import { client } from '@/db/client';
 import { getIronSession } from 'iron-session';
 import { sessionOptions } from '@/lib/session';
 

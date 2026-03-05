@@ -28,14 +28,12 @@ export const AdminNavigation: React.FC = () => {
 
   const navItems = [
     { label: 'ダッシュボード', href: '/admin/dashboard' },
-    { label: '相談一覧', href: '/admin/consultations' },
     { label: 'TOPページ編集', href: '/admin/top-page-edit' },
     { label: '自己紹介編集', href: '/admin/introduction-edit' },
     { label: '活動報告編集', href: '/admin/activity-report-edit' },
     { label: 'ShihoPress編集', href: '/admin/shihoPress-edit' },
-    { label: '監査ログ', href: '/admin/audit-logs' },
+    { label: '相談一覧', href: '/admin/consultations' },
     { label: 'デバイス管理', href: '/admin/settings/devices' },
-    { label: '復旧コード', href: '/admin/settings/recovery' },
   ];
 
   /**
